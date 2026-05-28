@@ -12,18 +12,22 @@ public sealed class UserProfileQueryService
         _logService = logService;
     }
 
-    public Task<IReadOnlyList<UserProfileInfo>> GetProfilesAsync(string computerName)
+    public Task<IReadOnlyList<UserProfileInfo>> GetProfilesAsync(string computerName, AdminCredentialInfo? credential = null)
     {
-        return Task.Run(() => GetProfiles(computerName));
+        return Task.Run(() => GetProfiles(computerName, credential));
     }
 
-    private IReadOnlyList<UserProfileInfo> GetProfiles(string computerName)
+    private IReadOnlyList<UserProfileInfo> GetProfiles(string computerName, AdminCredentialInfo? credential)
     {
         _logService.AddInfo($"Iniciando consulta WMI em {computerName}.");
+        _logService.AddInfo(credential?.HasCredential == true
+            ? $"Consulta usando credencial informada para o usuário {credential.UserName}."
+            : "Consulta usando o usuário atual do Windows.");
 
         var profiles = new List<UserProfileInfo>();
-        var scope = CreateScope(computerName);
+        var scope = CreateScope(computerName, credential);
         scope.Connect();
+        _logService.AddInfo("Conexão WMI estabelecida com sucesso.");
 
         var query = new ObjectQuery("SELECT SID, LocalPath, Loaded, Special, LastUseTime FROM Win32_UserProfile");
 
@@ -64,7 +68,7 @@ public sealed class UserProfileQueryService
             .ToList();
     }
 
-    private static ManagementScope CreateScope(string computerName)
+    private static ManagementScope CreateScope(string computerName, AdminCredentialInfo? credential)
     {
         var options = new ConnectionOptions
         {
@@ -72,6 +76,12 @@ public sealed class UserProfileQueryService
             Impersonation = ImpersonationLevel.Impersonate,
             Authentication = AuthenticationLevel.PacketPrivacy
         };
+
+        if (credential?.HasCredential == true)
+        {
+            options.Username = credential.UserName;
+            options.Password = credential.Password;
+        }
 
         return new ManagementScope($@"\\{computerName}\root\cimv2", options);
     }

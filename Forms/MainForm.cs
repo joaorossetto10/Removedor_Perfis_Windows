@@ -50,13 +50,28 @@ public partial class MainForm : Form
             return;
         }
 
+        AdminCredentialInfo? credential = null;
+
+        if (chkUseAdminCredential.Checked)
+        {
+            using var credentialForm = new CredentialForm();
+            if (credentialForm.ShowDialog(this) != DialogResult.OK || credentialForm.Credential is null)
+            {
+                _logService.AddWarning("Credencial administrativa cancelada. Operação de carregamento de perfis cancelada.");
+                lblStatus.Text = "Operação cancelada pelo usuário.";
+                return;
+            }
+
+            credential = credentialForm.Credential;
+        }
+
         SetLoadingState(true);
         _profiles.Clear();
         _logService.AddInfo($"Solicitação de carregamento de perfis para {computerName}.");
 
         try
         {
-            var profiles = await _userProfileQueryService.GetProfilesAsync(computerName);
+            var profiles = await _userProfileQueryService.GetProfilesAsync(computerName, credential);
 
             foreach (var profile in profiles)
             {
@@ -81,6 +96,7 @@ public partial class MainForm : Form
         }
         finally
         {
+            credential?.Clear();
             SetLoadingState(false);
         }
     }
@@ -89,6 +105,7 @@ public partial class MainForm : Form
     {
         btnLoadProfiles.Enabled = !isLoading;
         txtComputerName.Enabled = !isLoading;
+        chkUseAdminCredential.Enabled = !isLoading;
         UseWaitCursor = isLoading;
 
         if (isLoading)

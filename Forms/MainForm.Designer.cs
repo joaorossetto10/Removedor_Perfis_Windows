@@ -8,6 +8,7 @@ partial class MainForm
     private GroupBox grpConnection;
     private Label lblComputerName;
     private TextBox txtComputerName;
+    private CheckBox chkUseAdminCredential;
     private Button btnLoadProfiles;
     private Label lblStatus;
     private DataGridView dgvProfiles;
@@ -39,6 +40,7 @@ partial class MainForm
         grpConnection = new GroupBox();
         lblComputerName = new Label();
         txtComputerName = new TextBox();
+        chkUseAdminCredential = new CheckBox();
         btnLoadProfiles = new Button();
         lblStatus = new Label();
         dgvProfiles = new DataGridView();
@@ -79,6 +81,7 @@ partial class MainForm
         grpConnection.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
         grpConnection.Controls.Add(lblComputerName);
         grpConnection.Controls.Add(txtComputerName);
+        grpConnection.Controls.Add(chkUseAdminCredential);
         grpConnection.Controls.Add(btnLoadProfiles);
         grpConnection.Controls.Add(lblStatus);
         grpConnection.Location = new Point(28, 111);
@@ -104,12 +107,22 @@ partial class MainForm
         txtComputerName.Size = new Size(260, 23);
         txtComputerName.TabIndex = 1;
         // 
+        // chkUseAdminCredential
+        // 
+        chkUseAdminCredential.AutoSize = true;
+        chkUseAdminCredential.Location = new Point(292, 22);
+        chkUseAdminCredential.Name = "chkUseAdminCredential";
+        chkUseAdminCredential.Size = new Size(190, 19);
+        chkUseAdminCredential.TabIndex = 2;
+        chkUseAdminCredential.Text = "Usar credencial administrativa";
+        chkUseAdminCredential.UseVisualStyleBackColor = true;
+        // 
         // btnLoadProfiles
         // 
         btnLoadProfiles.Location = new Point(292, 46);
         btnLoadProfiles.Name = "btnLoadProfiles";
         btnLoadProfiles.Size = new Size(120, 25);
-        btnLoadProfiles.TabIndex = 2;
+        btnLoadProfiles.TabIndex = 3;
         btnLoadProfiles.Text = "Carregar perfis";
         btnLoadProfiles.UseVisualStyleBackColor = true;
         btnLoadProfiles.Click += BtnLoadProfiles_Click;
@@ -120,7 +133,7 @@ partial class MainForm
         lblStatus.Location = new Point(430, 50);
         lblStatus.Name = "lblStatus";
         lblStatus.Size = new Size(482, 20);
-        lblStatus.TabIndex = 3;
+        lblStatus.TabIndex = 4;
         lblStatus.Text = "Informe um computador remoto para carregar os perfis locais.";
         // 
         // dgvProfiles
