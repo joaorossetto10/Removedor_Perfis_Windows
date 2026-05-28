@@ -9,7 +9,10 @@ public sealed class UserProfileInfo
     public DateTime? LastUseTime { get; init; }
     public bool IsLoaded { get; init; }
     public bool IsSpecial { get; init; }
+    public bool CanRemove { get; init; }
+    public string BlockReason { get; init; } = string.Empty;
     public string Status { get; init; } = string.Empty;
+    public string Observation { get; init; } = string.Empty;
 
     public string LastUseTimeText => LastUseTime?.ToString("dd/MM/yyyy HH:mm:ss") ?? "Não informado";
 

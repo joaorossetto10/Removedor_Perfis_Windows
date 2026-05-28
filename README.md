@@ -8,6 +8,10 @@ O objetivo correto do projeto é remover perfis locais do Windows, não contas d
 
 Esta etapa permite informar um computador remoto e listar perfis locais do Windows usando WMI/Win32_UserProfile com o usuário atual ou com uma credencial administrativa informada apenas para a operação atual.
 
+A listagem classifica perfis comuns como disponíveis para análise e bloqueia perfis especiais, em uso, protegidos, de sistema/serviço ou com caminho fora de `C:\Users`.
+
+Também é detectado o usuário interativo logado no computador remoto quando `Win32_ComputerSystem.UserName` está disponível. Perfis com o mesmo nome desse usuário são bloqueados, mesmo que o WMI indique que não estão carregados.
+
 Ainda não há implementação de:
 
 - remoção de perfis locais.
@@ -48,5 +52,9 @@ Formatos aceitos para o usuário:
 Esta etapa não remove perfis, não apaga arquivos e não exclui contas.
 
 Senhas não são salvas em arquivo, configuração, README ou log. A credencial administrativa opcional é usada apenas durante a consulta atual.
+
+Perfis bloqueados aparecem na grade, mas não podem ser selecionados.
+
+Perfis com nomes duplicados em `C:\Users` recebem observação na grade e aviso no log para análise cuidadosa.
 
 As futuras ações de remoção devem usar mecanismos administrativos legítimos, como `Win32_UserProfile`, e exigir confirmação explícita antes de qualquer operação destrutiva.

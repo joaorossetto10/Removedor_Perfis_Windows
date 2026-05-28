@@ -19,6 +19,7 @@ partial class MainForm
     private DataGridViewCheckBoxColumn colIsLoaded;
     private DataGridViewTextBoxColumn colLastUseTime;
     private DataGridViewTextBoxColumn colStatus;
+    private DataGridViewTextBoxColumn colObservation;
     private Label lblLogs;
     private TextBox txtLogs;
 
@@ -51,6 +52,7 @@ partial class MainForm
         colIsLoaded = new DataGridViewCheckBoxColumn();
         colLastUseTime = new DataGridViewTextBoxColumn();
         colStatus = new DataGridViewTextBoxColumn();
+        colObservation = new DataGridViewTextBoxColumn();
         lblLogs = new Label();
         txtLogs = new TextBox();
         grpConnection.SuspendLayout();
@@ -142,7 +144,7 @@ partial class MainForm
         dgvProfiles.AllowUserToDeleteRows = false;
         dgvProfiles.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
         dgvProfiles.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-        dgvProfiles.Columns.AddRange(new DataGridViewColumn[] { colSelection, colUserName, colSid, colLocalPath, colIsLoaded, colLastUseTime, colStatus });
+        dgvProfiles.Columns.AddRange(new DataGridViewColumn[] { colSelection, colUserName, colSid, colLocalPath, colIsLoaded, colLastUseTime, colStatus, colObservation });
         dgvProfiles.Location = new Point(28, 217);
         dgvProfiles.MultiSelect = false;
         dgvProfiles.Name = "dgvProfiles";
@@ -150,6 +152,11 @@ partial class MainForm
         dgvProfiles.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
         dgvProfiles.Size = new Size(930, 240);
         dgvProfiles.TabIndex = 3;
+        dgvProfiles.CellBeginEdit += DgvProfiles_CellBeginEdit;
+        dgvProfiles.CellContentClick += DgvProfiles_CellContentClick;
+        dgvProfiles.CellValueChanged += DgvProfiles_CellValueChanged;
+        dgvProfiles.CurrentCellDirtyStateChanged += DgvProfiles_CurrentCellDirtyStateChanged;
+        dgvProfiles.DataBindingComplete += DgvProfiles_DataBindingComplete;
         // 
         // colSelection
         // 
@@ -176,11 +183,11 @@ partial class MainForm
         // 
         // colLocalPath
         // 
-        colLocalPath.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
         colLocalPath.DataPropertyName = "LocalPath";
         colLocalPath.HeaderText = "Caminho local";
         colLocalPath.Name = "colLocalPath";
         colLocalPath.ReadOnly = true;
+        colLocalPath.Width = 210;
         // 
         // colIsLoaded
         // 
@@ -204,7 +211,15 @@ partial class MainForm
         colStatus.HeaderText = "Status";
         colStatus.Name = "colStatus";
         colStatus.ReadOnly = true;
-        colStatus.Width = 150;
+        colStatus.Width = 230;
+        // 
+        // colObservation
+        // 
+        colObservation.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+        colObservation.DataPropertyName = "Observation";
+        colObservation.HeaderText = "Observação";
+        colObservation.Name = "colObservation";
+        colObservation.ReadOnly = true;
         // 
         // lblLogs
         // 

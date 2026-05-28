@@ -7,6 +7,9 @@ namespace RemovedorPerfisWindows.Forms;
 
 public partial class MainForm : Form
 {
+    private static readonly Color BlockedRowColor = Color.FromArgb(235, 235, 235);
+    private static readonly Color LoadedRowColor = Color.FromArgb(255, 230, 230);
+
     private readonly LogService _logService = new();
     private readonly BindingList<UserProfileInfo> _profiles = [];
     private UserProfileQueryService _userProfileQueryService = null!;
@@ -78,7 +81,12 @@ public partial class MainForm : Form
                 _profiles.Add(profile);
             }
 
-            lblStatus.Text = $"{profiles.Count} perfil(is) local(is) encontrado(s).";
+            var removableCount = profiles.Count(profile => profile.CanRemove);
+            var blockedCount = profiles.Count - removableCount;
+            var duplicateCount = profiles.Count(profile => profile.Observation.Contains("Nome duplicado", StringComparison.OrdinalIgnoreCase));
+            lblStatus.Text = duplicateCount > 0
+                ? $"{profiles.Count} perfil(is): {removableCount} disponível(is), {blockedCount} bloqueado(s), {duplicateCount} com nome duplicado."
+                : $"{profiles.Count} perfil(is) encontrado(s): {removableCount} disponível(is), {blockedCount} bloqueado(s).";
             _logService.AddInfo("Consulta concluída com sucesso.");
         }
         catch (Exception exception)
@@ -112,5 +120,112 @@ public partial class MainForm : Form
         {
             lblStatus.Text = "Carregando perfis...";
         }
+    }
+
+    private void DgvProfiles_CellBeginEdit(object? sender, DataGridViewCellCancelEventArgs e)
+    {
+        if (e.RowIndex < 0 || e.ColumnIndex != colSelection.Index)
+        {
+            return;
+        }
+
+        var profile = GetProfileFromRow(e.RowIndex);
+        if (profile?.CanRemove != false)
+        {
+            return;
+        }
+
+        e.Cancel = true;
+        profile.IsSelected = false;
+        dgvProfiles.InvalidateRow(e.RowIndex);
+        _logService.AddWarning($"Seleção bloqueada para {profile}: {profile.BlockReason}.");
+    }
+
+    private void DgvProfiles_CellContentClick(object? sender, DataGridViewCellEventArgs e)
+    {
+        if (e.RowIndex < 0 || e.ColumnIndex != colSelection.Index)
+        {
+            return;
+        }
+
+        var profile = GetProfileFromRow(e.RowIndex);
+        if (profile?.CanRemove == false)
+        {
+            profile.IsSelected = false;
+            dgvProfiles.InvalidateRow(e.RowIndex);
+            _logService.AddWarning($"Tentativa de seleção bloqueada para {profile}: {profile.BlockReason}.");
+        }
+    }
+
+    private void DgvProfiles_CurrentCellDirtyStateChanged(object? sender, EventArgs e)
+    {
+        if (dgvProfiles.IsCurrentCellDirty)
+        {
+            dgvProfiles.CommitEdit(DataGridViewDataErrorContexts.Commit);
+        }
+    }
+
+    private void DgvProfiles_CellValueChanged(object? sender, DataGridViewCellEventArgs e)
+    {
+        if (e.RowIndex < 0 || e.ColumnIndex != colSelection.Index)
+        {
+            return;
+        }
+
+        var profile = GetProfileFromRow(e.RowIndex);
+        if (profile is null || profile.CanRemove)
+        {
+            return;
+        }
+
+        profile.IsSelected = false;
+        dgvProfiles.Rows[e.RowIndex].Cells[colSelection.Index].Value = false;
+        dgvProfiles.InvalidateRow(e.RowIndex);
+        _logService.AddWarning($"Seleção desfeita para {profile}: {profile.BlockReason}.");
+    }
+
+    private void DgvProfiles_DataBindingComplete(object? sender, DataGridViewBindingCompleteEventArgs e)
+    {
+        ApplyProfileRowStyles();
+    }
+
+    private void ApplyProfileRowStyles()
+    {
+        foreach (DataGridViewRow row in dgvProfiles.Rows)
+        {
+            if (row.DataBoundItem is not UserProfileInfo profile)
+            {
+                continue;
+            }
+
+            row.Cells[colSelection.Index].ReadOnly = !profile.CanRemove;
+            row.Cells[colSelection.Index].ToolTipText = profile.CanRemove ? string.Empty : profile.BlockReason;
+
+            if (profile.IsLoaded)
+            {
+                row.DefaultCellStyle.BackColor = LoadedRowColor;
+                row.DefaultCellStyle.SelectionBackColor = Color.FromArgb(220, 160, 160);
+            }
+            else if (!profile.CanRemove)
+            {
+                row.DefaultCellStyle.BackColor = BlockedRowColor;
+                row.DefaultCellStyle.SelectionBackColor = Color.Gray;
+            }
+            else
+            {
+                row.DefaultCellStyle.BackColor = Color.White;
+                row.DefaultCellStyle.SelectionBackColor = SystemColors.Highlight;
+            }
+        }
+    }
+
+    private UserProfileInfo? GetProfileFromRow(int rowIndex)
+    {
+        if (rowIndex < 0 || rowIndex >= dgvProfiles.Rows.Count)
+        {
+            return null;
+        }
+
+        return dgvProfiles.Rows[rowIndex].DataBoundItem as UserProfileInfo;
     }
 }
