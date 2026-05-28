@@ -6,12 +6,10 @@ O objetivo correto do projeto é remover perfis locais do Windows, não contas d
 
 ## Estado atual
 
-Esta etapa inicial cria apenas a estrutura base do aplicativo Windows Forms em C#/.NET 8.
+Esta etapa permite informar um computador remoto e listar perfis locais do Windows usando WMI/Win32_UserProfile com as credenciais do usuário atual.
 
 Ainda não há implementação de:
 
-- conexão WMI/CIM;
-- listagem remota de perfis;
 - remoção de perfis locais.
 
 ## Requisitos
@@ -36,5 +34,7 @@ dotnet build
 - `Helpers`: funções auxiliares futuras.
 
 ## Segurança
+
+Esta etapa não remove perfis, não apaga arquivos, não exclui contas e não solicita credenciais.
 
 As futuras ações de remoção devem usar mecanismos administrativos legítimos, como `Win32_UserProfile`, e exigir confirmação explícita antes de qualquer operação destrutiva.
