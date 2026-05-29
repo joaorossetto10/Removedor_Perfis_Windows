@@ -21,6 +21,17 @@ public static class UserProfileSafetyHelper
         "CodexSandboxOffline"
     };
 
+    private static readonly HashSet<string> SystemOrServiceProfileNames = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "LocalService",
+        "NetworkService",
+        "systemprofile",
+        "DefaultAppPool",
+        "WDAGUtilityAccount",
+        "ksnproxy",
+        "himds"
+    };
+
     private static readonly HashSet<string> ProtectedUserPaths = new(StringComparer.OrdinalIgnoreCase)
     {
         @"C:\Users\Public",
@@ -59,6 +70,15 @@ public static class UserProfileSafetyHelper
         return NormalizePath(localPath).StartsWith(UsersPathPrefix, StringComparison.OrdinalIgnoreCase);
     }
 
+    public static bool IsSystemOrServiceProfile(UserProfileInfo profile)
+    {
+        var localPath = NormalizePath(profile.LocalPath);
+        var profileName = NormalizeProfileName(profile.UserName);
+
+        return IsSystemOrServicePath(localPath)
+            || SystemOrServiceProfileNames.Contains(profileName);
+    }
+
     public static string GetRemovalBlockReason(UserProfileInfo profile, string loggedOnProfileName)
     {
         if (!profile.CanRemove)
@@ -86,7 +106,7 @@ public static class UserProfileSafetyHelper
         var localPath = NormalizePath(profile.LocalPath);
         var profileName = NormalizeProfileName(profile.UserName);
 
-        if (IsSystemOrServicePath(localPath))
+        if (IsSystemOrServiceProfile(profile))
         {
             return "Bloqueado: perfil de sistema/serviço";
         }
@@ -158,6 +178,8 @@ public static class UserProfileSafetyHelper
             LastUseTime = profile.LastUseTime,
             IsLoaded = profile.IsLoaded,
             IsSpecial = profile.IsSpecial,
+            IsSystemOrServiceProfile = IsSystemOrServiceProfile(profile),
+            IsHiddenByDefault = IsSystemOrServiceProfile(profile),
             CanRemove = canRemove,
             BlockReason = blockReason,
             Status = status,

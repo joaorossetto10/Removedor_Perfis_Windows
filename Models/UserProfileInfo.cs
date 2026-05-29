@@ -23,6 +23,8 @@ public sealed class UserProfileInfo : INotifyPropertyChanged
     public DateTime? LastUseTime { get; init; }
     public bool IsLoaded { get; init; }
     public bool IsSpecial { get; init; }
+    public bool IsSystemOrServiceProfile { get; init; }
+    public bool IsHiddenByDefault { get; init; }
     public bool CanRemove { get; init; }
     public string BlockReason { get; init; } = string.Empty;
     public string Status { get; init; } = string.Empty;

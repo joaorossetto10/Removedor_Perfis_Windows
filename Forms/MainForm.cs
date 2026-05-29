@@ -15,6 +15,7 @@ public partial class MainForm : Form
 
     private readonly LogService _logService = new();
     private readonly BindingList<UserProfileInfo> _profiles = [];
+    private readonly List<UserProfileInfo> _allProfiles = [];
     private UserProfileQueryService _userProfileQueryService = null!;
     private ProfileSizeService _profileSizeService = null!;
     private UserProfileRemovalService _userProfileRemovalService = null!;
@@ -78,6 +79,7 @@ public partial class MainForm : Form
 
         SetLoadingState(true);
         _profiles.Clear();
+        _allProfiles.Clear();
         _logService.AddInfo($"Solicitação de carregamento de perfis para {computerName}.");
 
         try
@@ -88,17 +90,18 @@ public partial class MainForm : Form
             {
                 profile.SizeDisplay = "Não calculado";
                 profile.OperationStatus = string.Empty;
-                _profiles.Add(profile);
+                _allProfiles.Add(profile);
             }
+
+            ApplyProfileVisibilityFilter();
 
             UpdateRemoveButtonState();
 
-            var removableCount = profiles.Count(profile => profile.CanRemove);
-            var blockedCount = profiles.Count - removableCount;
+            var visibleProfiles = _profiles.ToList();
+            var removableCount = visibleProfiles.Count(profile => profile.CanRemove);
+            var blockedCount = visibleProfiles.Count - removableCount;
             var duplicateCount = profiles.Count(profile => profile.Observation.Contains("Nome duplicado", StringComparison.OrdinalIgnoreCase));
-            lblStatus.Text = duplicateCount > 0
-                ? $"{profiles.Count} perfil(is): {removableCount} disponível(is), {blockedCount} bloqueado(s), {duplicateCount} com nome duplicado."
-                : $"{profiles.Count} perfil(is) encontrado(s): {removableCount} disponível(is), {blockedCount} bloqueado(s).";
+            lblStatus.Text = BuildProfileSummaryText(profiles.Count, visibleProfiles.Count, removableCount, blockedCount, duplicateCount);
             _logService.AddInfo("Consulta concluída com sucesso.");
 
             if (chkCalculateProfileSize.Checked)
@@ -143,12 +146,23 @@ public partial class MainForm : Form
         _sizeCalculationCancellation.Cancel();
     }
 
+    private void ChkShowSystemProfiles_CheckedChanged(object? sender, EventArgs e)
+    {
+        ApplyProfileVisibilityFilter();
+
+        if (chkShowSystemProfiles.Checked)
+        {
+            _logService.AddWarning("Perfis de sistema/serviço estão visíveis apenas para análise e continuam bloqueados.");
+        }
+    }
+
     private void SetLoadingState(bool isLoading)
     {
         btnLoadProfiles.Enabled = !isLoading;
         txtComputerName.Enabled = !isLoading;
         chkUseAdminCredential.Enabled = !isLoading;
         chkCalculateProfileSize.Enabled = !isLoading;
+        chkShowSystemProfiles.Enabled = !isLoading;
         btnCancelSizeCalculation.Enabled = false;
         btnRemoveSelected.Enabled = !isLoading && HasSelectedRemovableProfiles();
         UseWaitCursor = isLoading;
@@ -388,6 +402,7 @@ public partial class MainForm : Form
         txtComputerName.Enabled = !isRemoving;
         chkUseAdminCredential.Enabled = !isRemoving;
         chkCalculateProfileSize.Enabled = !isRemoving;
+        chkShowSystemProfiles.Enabled = !isRemoving;
         dgvProfiles.Enabled = !isRemoving;
         UseWaitCursor = isRemoving;
     }
@@ -400,6 +415,51 @@ public partial class MainForm : Form
     private bool HasSelectedRemovableProfiles()
     {
         return _profiles.Any(profile => profile.IsSelected && profile.CanRemove);
+    }
+
+    private void ApplyProfileVisibilityFilter()
+    {
+        var showSystemProfiles = chkShowSystemProfiles.Checked;
+        var visibleProfiles = _allProfiles
+            .Where(profile => showSystemProfiles || !profile.IsHiddenByDefault)
+            .ToList();
+
+        var hiddenSystemProfiles = _allProfiles.Count(profile => profile.IsHiddenByDefault && !showSystemProfiles);
+        var visibleRemovable = visibleProfiles.Count(profile => profile.CanRemove);
+        var visibleBlocked = visibleProfiles.Count - visibleRemovable;
+        var duplicateCount = _allProfiles.Count(profile => profile.Observation.Contains("Nome duplicado", StringComparison.OrdinalIgnoreCase));
+
+        _profiles.Clear();
+
+        foreach (var profile in visibleProfiles)
+        {
+            _profiles.Add(profile);
+        }
+
+        _logService.AddInfo($"{_allProfiles.Count} perfil(is) total(is) retornado(s) pelo WMI.");
+        _logService.AddInfo($"{visibleProfiles.Count} perfil(is) exibido(s) na grade.");
+        _logService.AddInfo($"{hiddenSystemProfiles} perfil(is) ocultado(s) por serem de sistema/serviço.");
+        _logService.AddInfo($"{visibleBlocked} perfil(is) bloqueado(s) exibido(s).");
+        _logService.AddInfo($"{visibleRemovable} perfil(is) disponível(is) para análise exibido(s).");
+
+        if (_allProfiles.Count > 0)
+        {
+            lblStatus.Text = BuildProfileSummaryText(_allProfiles.Count, visibleProfiles.Count, visibleRemovable, visibleBlocked, duplicateCount);
+        }
+
+        UpdateRemoveButtonState();
+        ApplyProfileRowStyles();
+    }
+
+    private static string BuildProfileSummaryText(
+        int totalCount,
+        int visibleCount,
+        int removableCount,
+        int blockedCount,
+        int duplicateCount)
+    {
+        var duplicateText = duplicateCount > 0 ? $", {duplicateCount} com nome duplicado" : string.Empty;
+        return $"{visibleCount}/{totalCount} perfil(is) exibido(s): {removableCount} disponível(is), {blockedCount} bloqueado(s){duplicateText}.";
     }
 
     private async Task CalculateProfileSizesAsync(

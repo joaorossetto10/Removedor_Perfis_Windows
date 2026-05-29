@@ -10,6 +10,7 @@ partial class MainForm
     private TextBox txtComputerName;
     private CheckBox chkUseAdminCredential;
     private CheckBox chkCalculateProfileSize;
+    private CheckBox chkShowSystemProfiles;
     private Button btnLoadProfiles;
     private Button btnCancelSizeCalculation;
     private Button btnRemoveSelected;
@@ -48,6 +49,7 @@ partial class MainForm
         txtComputerName = new TextBox();
         chkUseAdminCredential = new CheckBox();
         chkCalculateProfileSize = new CheckBox();
+        chkShowSystemProfiles = new CheckBox();
         btnLoadProfiles = new Button();
         btnCancelSizeCalculation = new Button();
         btnRemoveSelected = new Button();
@@ -95,13 +97,14 @@ partial class MainForm
         grpConnection.Controls.Add(txtComputerName);
         grpConnection.Controls.Add(chkUseAdminCredential);
         grpConnection.Controls.Add(chkCalculateProfileSize);
+        grpConnection.Controls.Add(chkShowSystemProfiles);
         grpConnection.Controls.Add(btnLoadProfiles);
         grpConnection.Controls.Add(btnCancelSizeCalculation);
         grpConnection.Controls.Add(btnRemoveSelected);
         grpConnection.Controls.Add(lblStatus);
         grpConnection.Location = new Point(28, 111);
         grpConnection.Name = "grpConnection";
-        grpConnection.Size = new Size(930, 90);
+        grpConnection.Size = new Size(930, 112);
         grpConnection.TabIndex = 2;
         grpConnection.TabStop = false;
         grpConnection.Text = "Consulta";
@@ -142,12 +145,23 @@ partial class MainForm
         chkCalculateProfileSize.Text = "Calcular tamanho dos perfis";
         chkCalculateProfileSize.UseVisualStyleBackColor = true;
         // 
+        // chkShowSystemProfiles
+        // 
+        chkShowSystemProfiles.AutoSize = true;
+        chkShowSystemProfiles.Location = new Point(498, 47);
+        chkShowSystemProfiles.Name = "chkShowSystemProfiles";
+        chkShowSystemProfiles.Size = new Size(210, 19);
+        chkShowSystemProfiles.TabIndex = 4;
+        chkShowSystemProfiles.Text = "Mostrar perfis de sistema/serviço";
+        chkShowSystemProfiles.UseVisualStyleBackColor = true;
+        chkShowSystemProfiles.CheckedChanged += ChkShowSystemProfiles_CheckedChanged;
+        // 
         // btnLoadProfiles
         // 
         btnLoadProfiles.Location = new Point(292, 46);
         btnLoadProfiles.Name = "btnLoadProfiles";
         btnLoadProfiles.Size = new Size(120, 25);
-        btnLoadProfiles.TabIndex = 4;
+        btnLoadProfiles.TabIndex = 5;
         btnLoadProfiles.Text = "Carregar perfis";
         btnLoadProfiles.UseVisualStyleBackColor = true;
         btnLoadProfiles.Click += BtnLoadProfiles_Click;
@@ -158,7 +172,7 @@ partial class MainForm
         btnCancelSizeCalculation.Location = new Point(418, 46);
         btnCancelSizeCalculation.Name = "btnCancelSizeCalculation";
         btnCancelSizeCalculation.Size = new Size(115, 25);
-        btnCancelSizeCalculation.TabIndex = 5;
+        btnCancelSizeCalculation.TabIndex = 6;
         btnCancelSizeCalculation.Text = "Cancelar cálculo";
         btnCancelSizeCalculation.UseVisualStyleBackColor = true;
         btnCancelSizeCalculation.Click += BtnCancelSizeCalculation_Click;
@@ -166,10 +180,10 @@ partial class MainForm
         // btnRemoveSelected
         // 
         btnRemoveSelected.Enabled = false;
-        btnRemoveSelected.Location = new Point(548, 46);
+        btnRemoveSelected.Location = new Point(718, 46);
         btnRemoveSelected.Name = "btnRemoveSelected";
         btnRemoveSelected.Size = new Size(135, 25);
-        btnRemoveSelected.TabIndex = 6;
+        btnRemoveSelected.TabIndex = 7;
         btnRemoveSelected.Text = "Remover selecionados";
         btnRemoveSelected.UseVisualStyleBackColor = true;
         btnRemoveSelected.Click += BtnRemoveSelected_Click;
@@ -177,10 +191,10 @@ partial class MainForm
         // lblStatus
         // 
         lblStatus.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-        lblStatus.Location = new Point(696, 50);
+        lblStatus.Location = new Point(16, 82);
         lblStatus.Name = "lblStatus";
-        lblStatus.Size = new Size(216, 20);
-        lblStatus.TabIndex = 7;
+        lblStatus.Size = new Size(896, 20);
+        lblStatus.TabIndex = 8;
         lblStatus.Text = "Informe um computador remoto para carregar os perfis locais.";
         // 
         // dgvProfiles
@@ -190,12 +204,12 @@ partial class MainForm
         dgvProfiles.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
         dgvProfiles.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
         dgvProfiles.Columns.AddRange(new DataGridViewColumn[] { colSelection, colUserName, colSid, colLocalPath, colIsLoaded, colLastUseTime, colSize, colStatus, colOperationStatus, colObservation });
-        dgvProfiles.Location = new Point(28, 217);
+        dgvProfiles.Location = new Point(28, 239);
         dgvProfiles.MultiSelect = false;
         dgvProfiles.Name = "dgvProfiles";
         dgvProfiles.RowHeadersVisible = false;
         dgvProfiles.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-        dgvProfiles.Size = new Size(930, 240);
+        dgvProfiles.Size = new Size(930, 218);
         dgvProfiles.TabIndex = 3;
         dgvProfiles.CellBeginEdit += DgvProfiles_CellBeginEdit;
         dgvProfiles.CellContentClick += DgvProfiles_CellContentClick;

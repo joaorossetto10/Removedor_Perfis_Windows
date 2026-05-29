@@ -14,6 +14,8 @@ Também é detectado o usuário interativo logado no computador remoto quando `W
 
 A opção `Calcular tamanho dos perfis` usa acesso somente leitura ao compartilhamento administrativo `C$` do computador remoto para calcular o tamanho das pastas em `C:\Users`. Essa opção fica desmarcada por padrão, roda em segundo plano, calcula um perfil por vez e pode ser cancelada pelo botão `Cancelar cálculo`.
 
+A opção `Mostrar perfis de sistema/serviço` exibe perfis técnicos que ficam ocultos por padrão para manter a listagem mais limpa.
+
 Ainda não há implementação de:
 
 - exclusão de contas de usuário locais ou do domínio/AD.
@@ -58,6 +60,8 @@ Senhas não são salvas em arquivo, configuração, README ou log. A credencial 
 Perfis bloqueados aparecem na grade, mas não podem ser selecionados.
 
 Perfis com nomes duplicados em `C:\Users` recebem observação na grade e aviso no log para análise cuidadosa.
+
+Perfis de sistema/serviço ficam ocultos por padrão. Mesmo quando exibidos, permanecem bloqueados, não entram no cálculo de tamanho e não podem ser removidos.
 
 O cálculo de tamanho não altera arquivos. Ele ignora perfis bloqueados, junctions e links simbólicos, usa timeout por perfil e continua a listagem se algum caminho falhar. Os resultados podem aparecer como `Sem acesso ao C$`, `Tempo excedido`, `Cancelado` ou `Erro ao calcular`.
 
