@@ -12,6 +12,8 @@ A listagem classifica perfis comuns como disponíveis para análise e bloqueia p
 
 Também é detectado o usuário interativo logado no computador remoto quando `Win32_ComputerSystem.UserName` está disponível. Perfis com o mesmo nome desse usuário são bloqueados, mesmo que o WMI indique que não estão carregados.
 
+A opção `Calcular tamanho dos perfis` usa acesso somente leitura ao compartilhamento administrativo `C$` do computador remoto para calcular o tamanho das pastas em `C:\Users`. Essa opção fica desmarcada por padrão, roda em segundo plano, calcula um perfil por vez e pode ser cancelada pelo botão `Cancelar cálculo`.
+
 Ainda não há implementação de:
 
 - remoção de perfis locais.
@@ -56,5 +58,7 @@ Senhas não são salvas em arquivo, configuração, README ou log. A credencial 
 Perfis bloqueados aparecem na grade, mas não podem ser selecionados.
 
 Perfis com nomes duplicados em `C:\Users` recebem observação na grade e aviso no log para análise cuidadosa.
+
+O cálculo de tamanho não altera arquivos. Ele ignora perfis bloqueados, junctions e links simbólicos, usa timeout por perfil e continua a listagem se algum caminho falhar. Os resultados podem aparecer como `Sem acesso ao C$`, `Tempo excedido`, `Cancelado` ou `Erro ao calcular`.
 
 As futuras ações de remoção devem usar mecanismos administrativos legítimos, como `Win32_UserProfile`, e exigir confirmação explícita antes de qualquer operação destrutiva.

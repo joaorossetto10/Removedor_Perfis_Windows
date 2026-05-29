@@ -13,12 +13,15 @@ public partial class MainForm : Form
     private readonly LogService _logService = new();
     private readonly BindingList<UserProfileInfo> _profiles = [];
     private UserProfileQueryService _userProfileQueryService = null!;
+    private ProfileSizeService _profileSizeService = null!;
+    private CancellationTokenSource? _sizeCalculationCancellation;
 
     public MainForm()
     {
         InitializeComponent();
 
         _userProfileQueryService = new UserProfileQueryService(_logService);
+        _profileSizeService = new ProfileSizeService(_logService);
         dgvProfiles.AutoGenerateColumns = false;
         dgvProfiles.DataSource = _profiles;
 
@@ -78,6 +81,7 @@ public partial class MainForm : Form
 
             foreach (var profile in profiles)
             {
+                profile.SizeDisplay = "Não calculado";
                 _profiles.Add(profile);
             }
 
@@ -88,6 +92,15 @@ public partial class MainForm : Form
                 ? $"{profiles.Count} perfil(is): {removableCount} disponível(is), {blockedCount} bloqueado(s), {duplicateCount} com nome duplicado."
                 : $"{profiles.Count} perfil(is) encontrado(s): {removableCount} disponível(is), {blockedCount} bloqueado(s).";
             _logService.AddInfo("Consulta concluída com sucesso.");
+
+            if (chkCalculateProfileSize.Checked)
+            {
+                await CalculateProfileSizesAsync(computerName, profiles, credential);
+            }
+            else
+            {
+                _logService.AddInfo("Cálculo de tamanho dos perfis desativado.");
+            }
         }
         catch (Exception exception)
         {
@@ -109,11 +122,26 @@ public partial class MainForm : Form
         }
     }
 
+    private void BtnCancelSizeCalculation_Click(object? sender, EventArgs e)
+    {
+        if (_sizeCalculationCancellation is null)
+        {
+            return;
+        }
+
+        _logService.AddWarning("Cancelamento do cálculo de tamanho solicitado pelo usuário.");
+        lblStatus.Text = "Cancelando cálculo de tamanho...";
+        btnCancelSizeCalculation.Enabled = false;
+        _sizeCalculationCancellation.Cancel();
+    }
+
     private void SetLoadingState(bool isLoading)
     {
         btnLoadProfiles.Enabled = !isLoading;
         txtComputerName.Enabled = !isLoading;
         chkUseAdminCredential.Enabled = !isLoading;
+        chkCalculateProfileSize.Enabled = !isLoading;
+        btnCancelSizeCalculation.Enabled = false;
         UseWaitCursor = isLoading;
 
         if (isLoading)
@@ -227,5 +255,53 @@ public partial class MainForm : Form
         }
 
         return dgvProfiles.Rows[rowIndex].DataBoundItem as UserProfileInfo;
+    }
+
+    private async Task CalculateProfileSizesAsync(
+        string computerName,
+        IReadOnlyList<UserProfileInfo> profiles,
+        AdminCredentialInfo? credential)
+    {
+        lblStatus.Text = "Calculando tamanho dos perfis...";
+
+        _sizeCalculationCancellation?.Dispose();
+        _sizeCalculationCancellation = new CancellationTokenSource();
+        btnCancelSizeCalculation.Enabled = true;
+
+        var progress = new Progress<ProfileSizeResult>(result =>
+        {
+            result.Profile.SizeDisplay = result.DisplayText;
+            dgvProfiles.Refresh();
+        });
+
+        try
+        {
+            await _profileSizeService.CalculateSizesAsync(
+                computerName,
+                profiles,
+                credential,
+                progress,
+                _sizeCalculationCancellation.Token);
+
+            lblStatus.Text = _sizeCalculationCancellation.IsCancellationRequested
+                ? "Cálculo de tamanho cancelado."
+                : "Cálculo de tamanho concluído.";
+        }
+        catch (OperationCanceledException)
+        {
+            foreach (var profile in profiles.Where(profile => profile.SizeDisplay is "Não calculado" or "Calculando..."))
+            {
+                profile.SizeDisplay = "Cancelado";
+            }
+
+            _logService.AddWarning("Cálculo de tamanho cancelado pelo usuário.");
+            lblStatus.Text = "Cálculo de tamanho cancelado.";
+        }
+        finally
+        {
+            btnCancelSizeCalculation.Enabled = false;
+            _sizeCalculationCancellation.Dispose();
+            _sizeCalculationCancellation = null;
+        }
     }
 }

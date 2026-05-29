@@ -9,7 +9,9 @@ partial class MainForm
     private Label lblComputerName;
     private TextBox txtComputerName;
     private CheckBox chkUseAdminCredential;
+    private CheckBox chkCalculateProfileSize;
     private Button btnLoadProfiles;
+    private Button btnCancelSizeCalculation;
     private Label lblStatus;
     private DataGridView dgvProfiles;
     private DataGridViewCheckBoxColumn colSelection;
@@ -18,6 +20,7 @@ partial class MainForm
     private DataGridViewTextBoxColumn colLocalPath;
     private DataGridViewCheckBoxColumn colIsLoaded;
     private DataGridViewTextBoxColumn colLastUseTime;
+    private DataGridViewTextBoxColumn colSize;
     private DataGridViewTextBoxColumn colStatus;
     private DataGridViewTextBoxColumn colObservation;
     private Label lblLogs;
@@ -42,7 +45,9 @@ partial class MainForm
         lblComputerName = new Label();
         txtComputerName = new TextBox();
         chkUseAdminCredential = new CheckBox();
+        chkCalculateProfileSize = new CheckBox();
         btnLoadProfiles = new Button();
+        btnCancelSizeCalculation = new Button();
         lblStatus = new Label();
         dgvProfiles = new DataGridView();
         colSelection = new DataGridViewCheckBoxColumn();
@@ -51,6 +56,7 @@ partial class MainForm
         colLocalPath = new DataGridViewTextBoxColumn();
         colIsLoaded = new DataGridViewCheckBoxColumn();
         colLastUseTime = new DataGridViewTextBoxColumn();
+        colSize = new DataGridViewTextBoxColumn();
         colStatus = new DataGridViewTextBoxColumn();
         colObservation = new DataGridViewTextBoxColumn();
         lblLogs = new Label();
@@ -84,7 +90,9 @@ partial class MainForm
         grpConnection.Controls.Add(lblComputerName);
         grpConnection.Controls.Add(txtComputerName);
         grpConnection.Controls.Add(chkUseAdminCredential);
+        grpConnection.Controls.Add(chkCalculateProfileSize);
         grpConnection.Controls.Add(btnLoadProfiles);
+        grpConnection.Controls.Add(btnCancelSizeCalculation);
         grpConnection.Controls.Add(lblStatus);
         grpConnection.Location = new Point(28, 111);
         grpConnection.Name = "grpConnection";
@@ -119,23 +127,44 @@ partial class MainForm
         chkUseAdminCredential.Text = "Usar credencial administrativa";
         chkUseAdminCredential.UseVisualStyleBackColor = true;
         // 
+        // chkCalculateProfileSize
+        // 
+        chkCalculateProfileSize.AutoSize = true;
+        chkCalculateProfileSize.Location = new Point(498, 22);
+        chkCalculateProfileSize.Name = "chkCalculateProfileSize";
+        chkCalculateProfileSize.Size = new Size(169, 19);
+        chkCalculateProfileSize.TabIndex = 3;
+        chkCalculateProfileSize.Text = "Calcular tamanho dos perfis";
+        chkCalculateProfileSize.UseVisualStyleBackColor = true;
+        // 
         // btnLoadProfiles
         // 
         btnLoadProfiles.Location = new Point(292, 46);
         btnLoadProfiles.Name = "btnLoadProfiles";
         btnLoadProfiles.Size = new Size(120, 25);
-        btnLoadProfiles.TabIndex = 3;
+        btnLoadProfiles.TabIndex = 4;
         btnLoadProfiles.Text = "Carregar perfis";
         btnLoadProfiles.UseVisualStyleBackColor = true;
         btnLoadProfiles.Click += BtnLoadProfiles_Click;
         // 
+        // btnCancelSizeCalculation
+        // 
+        btnCancelSizeCalculation.Enabled = false;
+        btnCancelSizeCalculation.Location = new Point(418, 46);
+        btnCancelSizeCalculation.Name = "btnCancelSizeCalculation";
+        btnCancelSizeCalculation.Size = new Size(115, 25);
+        btnCancelSizeCalculation.TabIndex = 5;
+        btnCancelSizeCalculation.Text = "Cancelar cálculo";
+        btnCancelSizeCalculation.UseVisualStyleBackColor = true;
+        btnCancelSizeCalculation.Click += BtnCancelSizeCalculation_Click;
+        // 
         // lblStatus
         // 
         lblStatus.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-        lblStatus.Location = new Point(430, 50);
+        lblStatus.Location = new Point(548, 50);
         lblStatus.Name = "lblStatus";
-        lblStatus.Size = new Size(482, 20);
-        lblStatus.TabIndex = 4;
+        lblStatus.Size = new Size(364, 20);
+        lblStatus.TabIndex = 6;
         lblStatus.Text = "Informe um computador remoto para carregar os perfis locais.";
         // 
         // dgvProfiles
@@ -144,7 +173,7 @@ partial class MainForm
         dgvProfiles.AllowUserToDeleteRows = false;
         dgvProfiles.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
         dgvProfiles.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-        dgvProfiles.Columns.AddRange(new DataGridViewColumn[] { colSelection, colUserName, colSid, colLocalPath, colIsLoaded, colLastUseTime, colStatus, colObservation });
+        dgvProfiles.Columns.AddRange(new DataGridViewColumn[] { colSelection, colUserName, colSid, colLocalPath, colIsLoaded, colLastUseTime, colSize, colStatus, colObservation });
         dgvProfiles.Location = new Point(28, 217);
         dgvProfiles.MultiSelect = false;
         dgvProfiles.Name = "dgvProfiles";
@@ -204,6 +233,14 @@ partial class MainForm
         colLastUseTime.Name = "colLastUseTime";
         colLastUseTime.ReadOnly = true;
         colLastUseTime.Width = 145;
+        // 
+        // colSize
+        // 
+        colSize.DataPropertyName = "SizeDisplay";
+        colSize.HeaderText = "Tamanho";
+        colSize.Name = "colSize";
+        colSize.ReadOnly = true;
+        colSize.Width = 110;
         // 
         // colStatus
         // 

@@ -144,7 +144,8 @@ public static class UserProfileSafetyHelper
             CanRemove = canRemove,
             BlockReason = blockReason,
             Status = status,
-            Observation = observation
+            Observation = observation,
+            SizeDisplay = profile.SizeDisplay
         };
     }
 }
