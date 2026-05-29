@@ -59,6 +59,23 @@ public static class UserProfileSafetyHelper
         return NormalizePath(localPath).StartsWith(UsersPathPrefix, StringComparison.OrdinalIgnoreCase);
     }
 
+    public static string GetRemovalBlockReason(UserProfileInfo profile, string loggedOnProfileName)
+    {
+        if (!profile.CanRemove)
+        {
+            return string.IsNullOrWhiteSpace(profile.BlockReason)
+                ? "Perfil bloqueado por regra de segurança"
+                : profile.BlockReason;
+        }
+
+        if (string.IsNullOrWhiteSpace(profile.Sid))
+        {
+            return "SID não informado";
+        }
+
+        return GetBlockReason(profile, loggedOnProfileName);
+    }
+
     private static string GetBlockReason(UserProfileInfo profile, string loggedOnProfileName)
     {
         if (profile.IsSpecial)
@@ -145,7 +162,8 @@ public static class UserProfileSafetyHelper
             BlockReason = blockReason,
             Status = status,
             Observation = observation,
-            SizeDisplay = profile.SizeDisplay
+            SizeDisplay = profile.SizeDisplay,
+            OperationStatus = profile.OperationStatus
         };
     }
 }

@@ -12,6 +12,7 @@ partial class MainForm
     private CheckBox chkCalculateProfileSize;
     private Button btnLoadProfiles;
     private Button btnCancelSizeCalculation;
+    private Button btnRemoveSelected;
     private Label lblStatus;
     private DataGridView dgvProfiles;
     private DataGridViewCheckBoxColumn colSelection;
@@ -22,6 +23,7 @@ partial class MainForm
     private DataGridViewTextBoxColumn colLastUseTime;
     private DataGridViewTextBoxColumn colSize;
     private DataGridViewTextBoxColumn colStatus;
+    private DataGridViewTextBoxColumn colOperationStatus;
     private DataGridViewTextBoxColumn colObservation;
     private Label lblLogs;
     private TextBox txtLogs;
@@ -48,6 +50,7 @@ partial class MainForm
         chkCalculateProfileSize = new CheckBox();
         btnLoadProfiles = new Button();
         btnCancelSizeCalculation = new Button();
+        btnRemoveSelected = new Button();
         lblStatus = new Label();
         dgvProfiles = new DataGridView();
         colSelection = new DataGridViewCheckBoxColumn();
@@ -58,6 +61,7 @@ partial class MainForm
         colLastUseTime = new DataGridViewTextBoxColumn();
         colSize = new DataGridViewTextBoxColumn();
         colStatus = new DataGridViewTextBoxColumn();
+        colOperationStatus = new DataGridViewTextBoxColumn();
         colObservation = new DataGridViewTextBoxColumn();
         lblLogs = new Label();
         txtLogs = new TextBox();
@@ -93,6 +97,7 @@ partial class MainForm
         grpConnection.Controls.Add(chkCalculateProfileSize);
         grpConnection.Controls.Add(btnLoadProfiles);
         grpConnection.Controls.Add(btnCancelSizeCalculation);
+        grpConnection.Controls.Add(btnRemoveSelected);
         grpConnection.Controls.Add(lblStatus);
         grpConnection.Location = new Point(28, 111);
         grpConnection.Name = "grpConnection";
@@ -158,13 +163,24 @@ partial class MainForm
         btnCancelSizeCalculation.UseVisualStyleBackColor = true;
         btnCancelSizeCalculation.Click += BtnCancelSizeCalculation_Click;
         // 
+        // btnRemoveSelected
+        // 
+        btnRemoveSelected.Enabled = false;
+        btnRemoveSelected.Location = new Point(548, 46);
+        btnRemoveSelected.Name = "btnRemoveSelected";
+        btnRemoveSelected.Size = new Size(135, 25);
+        btnRemoveSelected.TabIndex = 6;
+        btnRemoveSelected.Text = "Remover selecionados";
+        btnRemoveSelected.UseVisualStyleBackColor = true;
+        btnRemoveSelected.Click += BtnRemoveSelected_Click;
+        // 
         // lblStatus
         // 
         lblStatus.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-        lblStatus.Location = new Point(548, 50);
+        lblStatus.Location = new Point(696, 50);
         lblStatus.Name = "lblStatus";
-        lblStatus.Size = new Size(364, 20);
-        lblStatus.TabIndex = 6;
+        lblStatus.Size = new Size(216, 20);
+        lblStatus.TabIndex = 7;
         lblStatus.Text = "Informe um computador remoto para carregar os perfis locais.";
         // 
         // dgvProfiles
@@ -173,7 +189,7 @@ partial class MainForm
         dgvProfiles.AllowUserToDeleteRows = false;
         dgvProfiles.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
         dgvProfiles.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-        dgvProfiles.Columns.AddRange(new DataGridViewColumn[] { colSelection, colUserName, colSid, colLocalPath, colIsLoaded, colLastUseTime, colSize, colStatus, colObservation });
+        dgvProfiles.Columns.AddRange(new DataGridViewColumn[] { colSelection, colUserName, colSid, colLocalPath, colIsLoaded, colLastUseTime, colSize, colStatus, colOperationStatus, colObservation });
         dgvProfiles.Location = new Point(28, 217);
         dgvProfiles.MultiSelect = false;
         dgvProfiles.Name = "dgvProfiles";
@@ -249,6 +265,14 @@ partial class MainForm
         colStatus.Name = "colStatus";
         colStatus.ReadOnly = true;
         colStatus.Width = 230;
+        // 
+        // colOperationStatus
+        // 
+        colOperationStatus.DataPropertyName = "OperationStatus";
+        colOperationStatus.HeaderText = "Resultado";
+        colOperationStatus.Name = "colOperationStatus";
+        colOperationStatus.ReadOnly = true;
+        colOperationStatus.Width = 130;
         // 
         // colObservation
         // 

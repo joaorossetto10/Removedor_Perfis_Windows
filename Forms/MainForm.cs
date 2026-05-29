@@ -9,11 +9,15 @@ public partial class MainForm : Form
 {
     private static readonly Color BlockedRowColor = Color.FromArgb(235, 235, 235);
     private static readonly Color LoadedRowColor = Color.FromArgb(255, 230, 230);
+    private static readonly Color RemovedRowColor = Color.FromArgb(220, 245, 220);
+    private static readonly Color SkippedRowColor = Color.FromArgb(255, 242, 204);
+    private static readonly Color ErrorRowColor = Color.FromArgb(255, 220, 220);
 
     private readonly LogService _logService = new();
     private readonly BindingList<UserProfileInfo> _profiles = [];
     private UserProfileQueryService _userProfileQueryService = null!;
     private ProfileSizeService _profileSizeService = null!;
+    private UserProfileRemovalService _userProfileRemovalService = null!;
     private CancellationTokenSource? _sizeCalculationCancellation;
 
     public MainForm()
@@ -22,6 +26,7 @@ public partial class MainForm : Form
 
         _userProfileQueryService = new UserProfileQueryService(_logService);
         _profileSizeService = new ProfileSizeService(_logService);
+        _userProfileRemovalService = new UserProfileRemovalService(_logService);
         dgvProfiles.AutoGenerateColumns = false;
         dgvProfiles.DataSource = _profiles;
 
@@ -82,8 +87,11 @@ public partial class MainForm : Form
             foreach (var profile in profiles)
             {
                 profile.SizeDisplay = "Não calculado";
+                profile.OperationStatus = string.Empty;
                 _profiles.Add(profile);
             }
+
+            UpdateRemoveButtonState();
 
             var removableCount = profiles.Count(profile => profile.CanRemove);
             var blockedCount = profiles.Count - removableCount;
@@ -142,6 +150,7 @@ public partial class MainForm : Form
         chkUseAdminCredential.Enabled = !isLoading;
         chkCalculateProfileSize.Enabled = !isLoading;
         btnCancelSizeCalculation.Enabled = false;
+        btnRemoveSelected.Enabled = !isLoading && HasSelectedRemovableProfiles();
         UseWaitCursor = isLoading;
 
         if (isLoading)
@@ -203,6 +212,7 @@ public partial class MainForm : Form
         var profile = GetProfileFromRow(e.RowIndex);
         if (profile is null || profile.CanRemove)
         {
+            UpdateRemoveButtonState();
             return;
         }
 
@@ -210,6 +220,7 @@ public partial class MainForm : Form
         dgvProfiles.Rows[e.RowIndex].Cells[colSelection.Index].Value = false;
         dgvProfiles.InvalidateRow(e.RowIndex);
         _logService.AddWarning($"Seleção desfeita para {profile}: {profile.BlockReason}.");
+        UpdateRemoveButtonState();
     }
 
     private void DgvProfiles_DataBindingComplete(object? sender, DataGridViewBindingCompleteEventArgs e)
@@ -229,7 +240,23 @@ public partial class MainForm : Form
             row.Cells[colSelection.Index].ReadOnly = !profile.CanRemove;
             row.Cells[colSelection.Index].ToolTipText = profile.CanRemove ? string.Empty : profile.BlockReason;
 
-            if (profile.IsLoaded)
+            if (string.Equals(profile.OperationStatus, "Removido", StringComparison.OrdinalIgnoreCase))
+            {
+                row.DefaultCellStyle.BackColor = RemovedRowColor;
+                row.DefaultCellStyle.SelectionBackColor = Color.FromArgb(140, 210, 140);
+            }
+            else if (string.Equals(profile.OperationStatus, "Ignorado", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(profile.OperationStatus, "Não confirmado", StringComparison.OrdinalIgnoreCase))
+            {
+                row.DefaultCellStyle.BackColor = SkippedRowColor;
+                row.DefaultCellStyle.SelectionBackColor = Color.FromArgb(230, 190, 110);
+            }
+            else if (string.Equals(profile.OperationStatus, "Erro ao remover", StringComparison.OrdinalIgnoreCase))
+            {
+                row.DefaultCellStyle.BackColor = ErrorRowColor;
+                row.DefaultCellStyle.SelectionBackColor = Color.FromArgb(220, 150, 150);
+            }
+            else if (profile.IsLoaded)
             {
                 row.DefaultCellStyle.BackColor = LoadedRowColor;
                 row.DefaultCellStyle.SelectionBackColor = Color.FromArgb(220, 160, 160);
@@ -255,6 +282,124 @@ public partial class MainForm : Form
         }
 
         return dgvProfiles.Rows[rowIndex].DataBoundItem as UserProfileInfo;
+    }
+
+    private async void BtnRemoveSelected_Click(object? sender, EventArgs e)
+    {
+        var computerName = txtComputerName.Text.Trim();
+        if (string.IsNullOrWhiteSpace(computerName))
+        {
+            _logService.AddWarning("Informe o nome do computador remoto antes de remover perfis.");
+            return;
+        }
+
+        var selectedProfiles = _profiles
+            .Where(profile => profile.IsSelected && profile.CanRemove)
+            .ToList();
+
+        if (selectedProfiles.Count == 0)
+        {
+            _logService.AddWarning("Nenhum perfil removível selecionado para remoção.");
+            UpdateRemoveButtonState();
+            return;
+        }
+
+        using (var confirmationForm = new RemovalConfirmationForm(computerName, selectedProfiles))
+        {
+            if (confirmationForm.ShowDialog(this) != DialogResult.OK)
+            {
+                _logService.AddWarning("Remoção cancelada na confirmação forte.");
+                return;
+            }
+        }
+
+        AdminCredentialInfo? credential = null;
+
+        if (chkUseAdminCredential.Checked)
+        {
+            using var credentialForm = new CredentialForm();
+            if (credentialForm.ShowDialog(this) != DialogResult.OK || credentialForm.Credential is null)
+            {
+                _logService.AddWarning("Credencial administrativa cancelada. Remoção cancelada.");
+                lblStatus.Text = "Remoção cancelada pelo usuário.";
+                return;
+            }
+
+            credential = credentialForm.Credential;
+        }
+
+        SetRemovalState(true);
+        lblStatus.Text = "Removendo perfis selecionados...";
+
+        foreach (var profile in selectedProfiles)
+        {
+            profile.OperationStatus = "Aguardando remoção";
+        }
+
+        try
+        {
+            var progress = new Progress<ProfileRemovalResult>(result =>
+            {
+                result.Profile.OperationStatus = result.Message;
+                result.Profile.IsSelected = false;
+                ApplyProfileRowStyles();
+                dgvProfiles.Refresh();
+            });
+
+            var results = await _userProfileRemovalService.RemoveProfilesAsync(
+                computerName,
+                selectedProfiles,
+                credential,
+                progress);
+
+            var removed = results.Count(result => result.Success);
+            var skipped = results.Count(result => result.Skipped);
+            var notConfirmed = results.Count(result => !result.Success && !result.Skipped && result.Message == "Não confirmado");
+            var errors = results.Count(result => !result.Success && !result.Skipped && result.Message == "Erro ao remover");
+
+            lblStatus.Text = $"Remoção concluída: {removed} removido(s), {skipped} ignorado(s), {errors} erro(s), {notConfirmed} não confirmado(s).";
+        }
+        catch (Exception exception)
+        {
+            var message = WmiErrorHelper.GetFriendlyMessage(exception);
+            lblStatus.Text = "Falha durante remoção.";
+            _logService.AddError(message);
+
+            MessageBox.Show(
+                message,
+                "Erro ao remover perfis",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Error);
+        }
+        finally
+        {
+            credential?.Clear();
+            SetRemovalState(false);
+            UpdateRemoveButtonState();
+            ApplyProfileRowStyles();
+        }
+    }
+
+    private void SetRemovalState(bool isRemoving)
+    {
+        btnLoadProfiles.Enabled = !isRemoving;
+        btnRemoveSelected.Enabled = !isRemoving && HasSelectedRemovableProfiles();
+        btnCancelSizeCalculation.Enabled = false;
+        txtComputerName.Enabled = !isRemoving;
+        chkUseAdminCredential.Enabled = !isRemoving;
+        chkCalculateProfileSize.Enabled = !isRemoving;
+        dgvProfiles.Enabled = !isRemoving;
+        UseWaitCursor = isRemoving;
+    }
+
+    private void UpdateRemoveButtonState()
+    {
+        btnRemoveSelected.Enabled = HasSelectedRemovableProfiles();
+    }
+
+    private bool HasSelectedRemovableProfiles()
+    {
+        return _profiles.Any(profile => profile.IsSelected && profile.CanRemove);
     }
 
     private async Task CalculateProfileSizesAsync(

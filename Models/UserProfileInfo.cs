@@ -7,6 +7,7 @@ public sealed class UserProfileInfo : INotifyPropertyChanged
 {
     private bool _isSelected;
     private string _sizeDisplay = "Não calculado";
+    private string _operationStatus = string.Empty;
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -31,6 +32,12 @@ public sealed class UserProfileInfo : INotifyPropertyChanged
     {
         get => _sizeDisplay;
         set => SetField(ref _sizeDisplay, value);
+    }
+
+    public string OperationStatus
+    {
+        get => _operationStatus;
+        set => SetField(ref _operationStatus, value);
     }
 
     public string LastUseTimeText => LastUseTime?.ToString("dd/MM/yyyy HH:mm:ss") ?? "Não informado";

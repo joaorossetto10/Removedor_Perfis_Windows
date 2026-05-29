@@ -16,7 +16,7 @@ A opção `Calcular tamanho dos perfis` usa acesso somente leitura ao compartilh
 
 Ainda não há implementação de:
 
-- remoção de perfis locais.
+- exclusão de contas de usuário locais ou do domínio/AD.
 
 ## Requisitos
 
@@ -51,7 +51,7 @@ Formatos aceitos para o usuário:
 
 ## Segurança
 
-Esta etapa não remove perfis, não apaga arquivos e não exclui contas.
+Esta etapa permite remover apenas perfis locais selecionados e confirmados. Ela não exclui contas locais, contas do domínio ou objetos do Active Directory.
 
 Senhas não são salvas em arquivo, configuração, README ou log. A credencial administrativa opcional é usada apenas durante a consulta atual.
 
@@ -61,4 +61,12 @@ Perfis com nomes duplicados em `C:\Users` recebem observação na grade e aviso 
 
 O cálculo de tamanho não altera arquivos. Ele ignora perfis bloqueados, junctions e links simbólicos, usa timeout por perfil e continua a listagem se algum caminho falhar. Os resultados podem aparecer como `Sem acesso ao C$`, `Tempo excedido`, `Cancelado` ou `Erro ao calcular`.
 
-As futuras ações de remoção devem usar mecanismos administrativos legítimos, como `Win32_UserProfile`, e exigir confirmação explícita antes de qualquer operação destrutiva.
+Qualquer remoção usa mecanismos administrativos legítimos, como `Win32_UserProfile`, e exige confirmação explícita antes da operação.
+
+## Remoção segura de perfis
+
+A remoção usa `Win32_UserProfile` pelo SID do perfil selecionado. A ferramenta não exclui contas locais, contas do domínio ou objetos do Active Directory.
+
+Antes de remover, a aplicação mostra os perfis selecionados, seus caminhos locais e exige digitar o nome do computador remoto para confirmação. Perfis em uso, protegidos, especiais, de sistema/serviço, fora de `C:\Users` ou do usuário atualmente logado são bloqueados.
+
+A ferramenta não apaga pastas manualmente antes da remoção via WMI. Após chamar a remoção, o SID é consultado novamente no WMI para confirmar o resultado.
