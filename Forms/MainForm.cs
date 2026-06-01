@@ -70,7 +70,7 @@ public partial class MainForm : Form
             if (credentialForm.ShowDialog(this) != DialogResult.OK || credentialForm.Credential is null)
             {
                 _logService.AddWarning("Credencial administrativa cancelada. Operação de carregamento de perfis cancelada.");
-                lblStatus.Text = "Operação cancelada pelo usuário.";
+                lblStatus.Text = "operação cancelada pelo usuário.";
                 return;
             }
 
@@ -116,7 +116,7 @@ public partial class MainForm : Form
         catch (Exception exception)
         {
             var message = WmiErrorHelper.GetFriendlyMessage(exception);
-            lblStatus.Text = "Falha ao carregar perfis.";
+            lblStatus.Text = "falha ao carregar perfis.";
             _logService.AddError(message);
             _logService.AddError(exception.Message);
 
@@ -141,7 +141,7 @@ public partial class MainForm : Form
         }
 
         _logService.AddWarning("Cancelamento do cálculo de tamanho solicitado pelo usuário.");
-        lblStatus.Text = "Cancelando cálculo de tamanho...";
+        lblStatus.Text = "cancelando cálculo de tamanho...";
         btnCancelSizeCalculation.Enabled = false;
         _sizeCalculationCancellation.Cancel();
     }
@@ -169,7 +169,7 @@ public partial class MainForm : Form
 
         if (isLoading)
         {
-            lblStatus.Text = "Carregando perfis...";
+            lblStatus.Text = "carregando perfis...";
         }
     }
 
@@ -335,7 +335,7 @@ public partial class MainForm : Form
             if (credentialForm.ShowDialog(this) != DialogResult.OK || credentialForm.Credential is null)
             {
                 _logService.AddWarning("Credencial administrativa cancelada. Remoção cancelada.");
-                lblStatus.Text = "Remoção cancelada pelo usuário.";
+                lblStatus.Text = "remoção cancelada pelo usuário.";
                 return;
             }
 
@@ -343,7 +343,7 @@ public partial class MainForm : Form
         }
 
         SetRemovalState(true);
-        lblStatus.Text = "Removendo perfis selecionados...";
+        lblStatus.Text = "removendo perfis selecionados...";
 
         foreach (var profile in selectedProfiles)
         {
@@ -371,12 +371,12 @@ public partial class MainForm : Form
             var notConfirmed = results.Count(result => !result.Success && !result.Skipped && result.Message == "Não confirmado");
             var errors = results.Count(result => !result.Success && !result.Skipped && result.Message == "Erro ao remover");
 
-            lblStatus.Text = $"Remoção concluída: {removed} removido(s), {skipped} ignorado(s), {errors} erro(s), {notConfirmed} não confirmado(s).";
+            lblStatus.Text = $"remoção concluída: {removed} removido(s), {skipped} ignorado(s), {errors} erro(s), {notConfirmed} não confirmado(s).";
         }
         catch (Exception exception)
         {
             var message = WmiErrorHelper.GetFriendlyMessage(exception);
-            lblStatus.Text = "Falha durante remoção.";
+            lblStatus.Text = "falha durante remoção.";
             _logService.AddError(message);
 
             MessageBox.Show(
@@ -459,7 +459,7 @@ public partial class MainForm : Form
         int duplicateCount)
     {
         var duplicateText = duplicateCount > 0 ? $", {duplicateCount} com nome duplicado" : string.Empty;
-        return $"{visibleCount}/{totalCount} perfil(is) exibido(s): {removableCount} disponível(is), {blockedCount} bloqueado(s){duplicateText}.";
+        return $"{visibleCount}/{totalCount} perfis exibidos: {removableCount} disponíveis, {blockedCount} bloqueados{duplicateText}.";
     }
 
     private async Task CalculateProfileSizesAsync(
@@ -467,7 +467,7 @@ public partial class MainForm : Form
         IReadOnlyList<UserProfileInfo> profiles,
         AdminCredentialInfo? credential)
     {
-        lblStatus.Text = "Calculando tamanho dos perfis...";
+        lblStatus.Text = "calculando tamanho dos perfis...";
 
         _sizeCalculationCancellation?.Dispose();
         _sizeCalculationCancellation = new CancellationTokenSource();
@@ -489,8 +489,8 @@ public partial class MainForm : Form
                 _sizeCalculationCancellation.Token);
 
             lblStatus.Text = _sizeCalculationCancellation.IsCancellationRequested
-                ? "Cálculo de tamanho cancelado."
-                : "Cálculo de tamanho concluído.";
+                ? "cálculo de tamanho cancelado."
+                : "cálculo de tamanho concluído.";
         }
         catch (OperationCanceledException)
         {
@@ -500,7 +500,7 @@ public partial class MainForm : Form
             }
 
             _logService.AddWarning("Cálculo de tamanho cancelado pelo usuário.");
-            lblStatus.Text = "Cálculo de tamanho cancelado.";
+            lblStatus.Text = "cálculo de tamanho cancelado.";
         }
         finally
         {
@@ -508,5 +508,23 @@ public partial class MainForm : Form
             _sizeCalculationCancellation.Dispose();
             _sizeCalculationCancellation = null;
         }
+    }
+
+    private void BtnClearLog_Click(object? sender, EventArgs e)
+    {
+        txtLogs.Clear();
+        _logService.AddInfo("Log da interface limpo.");
+    }
+
+    private void BtnCopyLog_Click(object? sender, EventArgs e)
+    {
+        if (string.IsNullOrWhiteSpace(txtLogs.Text))
+        {
+            _logService.AddWarning("Não há conteúdo de log para copiar.");
+            return;
+        }
+
+        Clipboard.SetText(txtLogs.Text);
+        _logService.AddInfo("Log copiado para a área de transferência.");
     }
 }
