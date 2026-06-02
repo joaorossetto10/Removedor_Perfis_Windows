@@ -7,11 +7,23 @@ namespace RemovedorPerfisWindows.Forms;
 
 public partial class MainForm : Form
 {
-    private static readonly Color BlockedRowColor = Color.FromArgb(235, 235, 235);
-    private static readonly Color LoadedRowColor = Color.FromArgb(255, 230, 230);
-    private static readonly Color RemovedRowColor = Color.FromArgb(220, 245, 220);
+    private static readonly Color AvailableRowColor = Color.White;
+    private static readonly Color SelectedForActionRowColor = Color.FromArgb(225, 240, 255);
+    private static readonly Color ProtectedRowColor = Color.FromArgb(242, 242, 242);
+    private static readonly Color AttentionRowColor = Color.FromArgb(255, 249, 219);
+    private static readonly Color LoadedRowColor = Color.FromArgb(255, 226, 226);
+    private static readonly Color RemovedRowColor = Color.FromArgb(225, 246, 225);
     private static readonly Color SkippedRowColor = Color.FromArgb(255, 242, 204);
-    private static readonly Color ErrorRowColor = Color.FromArgb(255, 220, 220);
+    private static readonly Color ErrorRowColor = Color.FromArgb(255, 222, 222);
+
+    private const int CollapsedStatusTop = 216;
+    private const int ExpandedStatusTop = 276;
+    private const int LegendGap = 10;
+    private const int GridGap = 4;
+    private const int LogsGap = 12;
+    private const int LogsHeaderHeight = 27;
+    private const int LogsHeight = 95;
+    private const int SideMargin = 28;
 
     private readonly LogService _logService = new();
     private readonly BindingList<UserProfileInfo> _profiles = [];
@@ -30,6 +42,8 @@ public partial class MainForm : Form
         _userProfileRemovalService = new UserProfileRemovalService(_logService);
         dgvProfiles.AutoGenerateColumns = false;
         dgvProfiles.DataSource = _profiles;
+        ApplyAdvancedSettingsVisibility();
+        ApplyTechnicalColumnsVisibility();
 
         _logService.EntryAdded += OnLogEntryAdded;
         _logService.AddInfo("Aplicativo iniciado. A etapa atual permite apenas listar perfis locais via Win32_UserProfile.");
@@ -156,13 +170,25 @@ public partial class MainForm : Form
         }
     }
 
+    private void ChkShowAdvancedSettings_CheckedChanged(object? sender, EventArgs e)
+    {
+        ApplyAdvancedSettingsVisibility();
+    }
+
+    private void ChkShowTechnicalDetails_CheckedChanged(object? sender, EventArgs e)
+    {
+        ApplyTechnicalColumnsVisibility();
+    }
+
     private void SetLoadingState(bool isLoading)
     {
         btnLoadProfiles.Enabled = !isLoading;
         txtComputerName.Enabled = !isLoading;
         chkUseAdminCredential.Enabled = !isLoading;
         chkCalculateProfileSize.Enabled = !isLoading;
+        chkShowAdvancedSettings.Enabled = !isLoading;
         chkShowSystemProfiles.Enabled = !isLoading;
+        chkShowTechnicalDetails.Enabled = !isLoading;
         btnCancelSizeCalculation.Enabled = false;
         btnRemoveSelected.Enabled = !isLoading && HasSelectedRemovableProfiles();
         UseWaitCursor = isLoading;
@@ -227,6 +253,7 @@ public partial class MainForm : Form
         if (profile is null || profile.CanRemove)
         {
             UpdateRemoveButtonState();
+            ApplyProfileRowStyles();
             return;
         }
 
@@ -254,7 +281,8 @@ public partial class MainForm : Form
             row.Cells[colSelection.Index].ReadOnly = !profile.CanRemove;
             row.Cells[colSelection.Index].ToolTipText = profile.CanRemove ? string.Empty : profile.BlockReason;
 
-            if (string.Equals(profile.OperationStatus, "Removido", StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(profile.OperationStatus, "Removido com sucesso", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(profile.OperationStatus, "Removido", StringComparison.OrdinalIgnoreCase))
             {
                 row.DefaultCellStyle.BackColor = RemovedRowColor;
                 row.DefaultCellStyle.SelectionBackColor = Color.FromArgb(140, 210, 140);
@@ -270,6 +298,16 @@ public partial class MainForm : Form
                 row.DefaultCellStyle.BackColor = ErrorRowColor;
                 row.DefaultCellStyle.SelectionBackColor = Color.FromArgb(220, 150, 150);
             }
+            else if (profile.IsSelected && profile.CanRemove)
+            {
+                row.DefaultCellStyle.BackColor = SelectedForActionRowColor;
+                row.DefaultCellStyle.SelectionBackColor = Color.FromArgb(145, 190, 235);
+            }
+            else if (profile.Observation.Contains("Nome duplicado", StringComparison.OrdinalIgnoreCase))
+            {
+                row.DefaultCellStyle.BackColor = AttentionRowColor;
+                row.DefaultCellStyle.SelectionBackColor = Color.FromArgb(230, 205, 120);
+            }
             else if (profile.IsLoaded)
             {
                 row.DefaultCellStyle.BackColor = LoadedRowColor;
@@ -277,12 +315,14 @@ public partial class MainForm : Form
             }
             else if (!profile.CanRemove)
             {
-                row.DefaultCellStyle.BackColor = BlockedRowColor;
-                row.DefaultCellStyle.SelectionBackColor = Color.Gray;
+                row.DefaultCellStyle.BackColor = profile.IsSystemOrServiceProfile || profile.BlockReason.Contains("protegido", StringComparison.OrdinalIgnoreCase)
+                    ? ProtectedRowColor
+                    : LoadedRowColor;
+                row.DefaultCellStyle.SelectionBackColor = Color.FromArgb(205, 205, 205);
             }
             else
             {
-                row.DefaultCellStyle.BackColor = Color.White;
+                row.DefaultCellStyle.BackColor = AvailableRowColor;
                 row.DefaultCellStyle.SelectionBackColor = SystemColors.Highlight;
             }
         }
@@ -354,7 +394,7 @@ public partial class MainForm : Form
         {
             var progress = new Progress<ProfileRemovalResult>(result =>
             {
-                result.Profile.OperationStatus = result.Message;
+                result.Profile.OperationStatus = GetFriendlyRemovalStatus(result.Message);
                 result.Profile.IsSelected = false;
                 ApplyProfileRowStyles();
                 dgvProfiles.Refresh();
@@ -402,7 +442,9 @@ public partial class MainForm : Form
         txtComputerName.Enabled = !isRemoving;
         chkUseAdminCredential.Enabled = !isRemoving;
         chkCalculateProfileSize.Enabled = !isRemoving;
+        chkShowAdvancedSettings.Enabled = !isRemoving;
         chkShowSystemProfiles.Enabled = !isRemoving;
+        chkShowTechnicalDetails.Enabled = !isRemoving;
         dgvProfiles.Enabled = !isRemoving;
         UseWaitCursor = isRemoving;
     }
@@ -459,7 +501,7 @@ public partial class MainForm : Form
         int duplicateCount)
     {
         var duplicateText = duplicateCount > 0 ? $", {duplicateCount} com nome duplicado" : string.Empty;
-        return $"{visibleCount}/{totalCount} perfis exibidos: {removableCount} disponíveis, {blockedCount} bloqueados{duplicateText}.";
+        return $"{totalCount} perfis encontrados | {visibleCount} exibidos | {removableCount} disponíveis | {blockedCount} bloqueados{duplicateText}.";
     }
 
     private async Task CalculateProfileSizesAsync(
@@ -526,5 +568,57 @@ public partial class MainForm : Form
 
         Clipboard.SetText(txtLogs.Text);
         _logService.AddInfo("Log copiado para a área de transferência.");
+    }
+
+    private void ApplyAdvancedSettingsVisibility()
+    {
+        grpAdvancedSettings.Visible = chkShowAdvancedSettings.Checked;
+
+        var statusTop = chkShowAdvancedSettings.Checked ? ExpandedStatusTop : CollapsedStatusTop;
+        grpStatus.Top = statusTop;
+        lblLegend.Top = grpStatus.Bottom + LegendGap;
+        dgvProfiles.Top = lblLegend.Bottom + GridGap;
+        ResizeMainSections();
+    }
+
+    private void ApplyTechnicalColumnsVisibility()
+    {
+        var showTechnicalDetails = chkShowTechnicalDetails.Checked;
+        colSid.Visible = showTechnicalDetails;
+        colLocalPath.Visible = showTechnicalDetails;
+        colOperationStatus.Visible = showTechnicalDetails;
+        colObservation.Visible = showTechnicalDetails;
+    }
+
+    private void ResizeMainSections()
+    {
+        if (txtLogs is null || dgvProfiles is null)
+        {
+            return;
+        }
+
+        var logsTop = ClientSize.Height - SideMargin - LogsHeight;
+        var logsHeaderTop = logsTop - LogsHeaderHeight;
+        var gridBottom = logsHeaderTop - LogsGap;
+
+        dgvProfiles.Height = Math.Max(180, gridBottom - dgvProfiles.Top);
+        lblLogs.Top = logsHeaderTop + 7;
+        btnClearLog.Top = logsHeaderTop;
+        btnCopyLog.Top = logsHeaderTop;
+        txtLogs.Top = logsTop;
+        txtLogs.Height = LogsHeight;
+    }
+
+    protected override void OnResize(EventArgs e)
+    {
+        base.OnResize(e);
+        ResizeMainSections();
+    }
+
+    private static string GetFriendlyRemovalStatus(string message)
+    {
+        return string.Equals(message, "Removido", StringComparison.OrdinalIgnoreCase)
+            ? "Removido com sucesso"
+            : message;
     }
 }

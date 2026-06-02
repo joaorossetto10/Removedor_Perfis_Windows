@@ -46,7 +46,7 @@ public static class UserProfileSafetyHelper
 
         if (string.IsNullOrWhiteSpace(blockReason))
         {
-            return WithSafety(profile, canRemove: true, blockReason: string.Empty, status: "Disponível para análise");
+            return WithSafety(profile, canRemove: true, blockReason: string.Empty, status: "Disponível para remoção");
         }
 
         return WithSafety(profile, canRemove: false, blockReason, status: blockReason);
@@ -59,7 +59,7 @@ public static class UserProfileSafetyHelper
             : $"{profile.Observation}; Nome duplicado";
 
         var status = profile.CanRemove
-            ? "Disponível para análise - nome duplicado"
+            ? "Disponível - nome duplicado"
             : profile.Status;
 
         return Copy(profile, profile.CanRemove, profile.BlockReason, status, observation);
@@ -100,7 +100,7 @@ public static class UserProfileSafetyHelper
     {
         if (profile.IsSpecial)
         {
-            return "Bloqueado: perfil especial do Windows";
+            return "Bloqueado: perfil especial";
         }
 
         var localPath = NormalizePath(profile.LocalPath);
@@ -108,7 +108,7 @@ public static class UserProfileSafetyHelper
 
         if (IsSystemOrServiceProfile(profile))
         {
-            return "Bloqueado: perfil de sistema/serviço";
+            return "Bloqueado: perfil de sistema";
         }
 
         if (string.IsNullOrWhiteSpace(localPath) || !localPath.StartsWith(UsersPathPrefix, StringComparison.OrdinalIgnoreCase))
@@ -118,7 +118,7 @@ public static class UserProfileSafetyHelper
 
         if (IsLoggedOnUserProfile(profileName, loggedOnProfileName))
         {
-            return "Bloqueado: usuário atualmente logado";
+            return "Bloqueado: usuário está logado";
         }
 
         if (profile.IsLoaded)

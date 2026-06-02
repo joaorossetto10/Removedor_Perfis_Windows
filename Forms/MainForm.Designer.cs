@@ -5,14 +5,18 @@ partial class MainForm
     private System.ComponentModel.IContainer components = null;
     private Label lblTitle;
     private Label lblDescription;
+    private Label lblStepsHelp;
     private GroupBox grpConnection;
     private Label lblComputerName;
     private TextBox txtComputerName;
-    private CheckBox chkUseAdminCredential;
     private Button btnLoadProfiles;
     private GroupBox grpOptions;
     private CheckBox chkCalculateProfileSize;
+    private CheckBox chkShowAdvancedSettings;
+    private GroupBox grpAdvancedSettings;
+    private CheckBox chkUseAdminCredential;
     private CheckBox chkShowSystemProfiles;
+    private CheckBox chkShowTechnicalDetails;
     private GroupBox grpActions;
     private Button btnRemoveSelected;
     private Button btnCancelSizeCalculation;
@@ -53,14 +57,18 @@ partial class MainForm
         components = new System.ComponentModel.Container();
         lblTitle = new Label();
         lblDescription = new Label();
+        lblStepsHelp = new Label();
         grpConnection = new GroupBox();
         lblComputerName = new Label();
         txtComputerName = new TextBox();
-        chkUseAdminCredential = new CheckBox();
         btnLoadProfiles = new Button();
         grpOptions = new GroupBox();
         chkCalculateProfileSize = new CheckBox();
+        chkShowAdvancedSettings = new CheckBox();
+        grpAdvancedSettings = new GroupBox();
+        chkUseAdminCredential = new CheckBox();
         chkShowSystemProfiles = new CheckBox();
+        chkShowTechnicalDetails = new CheckBox();
         grpActions = new GroupBox();
         btnRemoveSelected = new Button();
         btnCancelSizeCalculation = new Button();
@@ -86,6 +94,7 @@ partial class MainForm
         toolTip = new ToolTip(components);
         grpConnection.SuspendLayout();
         grpOptions.SuspendLayout();
+        grpAdvancedSettings.SuspendLayout();
         grpActions.SuspendLayout();
         grpStatus.SuspendLayout();
         ((System.ComponentModel.ISupportInitialize)dgvProfiles).BeginInit();
@@ -106,20 +115,28 @@ partial class MainForm
         lblDescription.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
         lblDescription.Location = new Point(28, 55);
         lblDescription.Name = "lblDescription";
-        lblDescription.Size = new Size(1040, 28);
+        lblDescription.Size = new Size(1040, 20);
         lblDescription.TabIndex = 1;
         lblDescription.Text = "Ferramenta interna de TI para gerenciamento seguro de perfis locais do Windows.";
+        // 
+        // lblStepsHelp
+        // 
+        lblStepsHelp.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+        lblStepsHelp.Location = new Point(28, 77);
+        lblStepsHelp.Name = "lblStepsHelp";
+        lblStepsHelp.Size = new Size(1040, 34);
+        lblStepsHelp.TabIndex = 2;
+        lblStepsHelp.Text = "Passo 1: informe o computador e carregue os perfis.  Passo 2: analise perfil, último uso, tamanho e status.  Passo 3: selecione apenas perfis disponíveis e remova com confirmação.";
         // 
         // grpConnection
         // 
         grpConnection.Controls.Add(lblComputerName);
         grpConnection.Controls.Add(txtComputerName);
-        grpConnection.Controls.Add(chkUseAdminCredential);
         grpConnection.Controls.Add(btnLoadProfiles);
-        grpConnection.Location = new Point(28, 92);
+        grpConnection.Location = new Point(28, 120);
         grpConnection.Name = "grpConnection";
-        grpConnection.Size = new Size(360, 104);
-        grpConnection.TabIndex = 2;
+        grpConnection.Size = new Size(360, 88);
+        grpConnection.TabIndex = 3;
         grpConnection.TabStop = false;
         grpConnection.Text = "Conexão";
         // 
@@ -136,22 +153,13 @@ partial class MainForm
         // 
         txtComputerName.Location = new Point(16, 45);
         txtComputerName.Name = "txtComputerName";
-        txtComputerName.Size = new Size(205, 23);
+        txtComputerName.Size = new Size(210, 23);
         txtComputerName.TabIndex = 1;
-        // 
-        // chkUseAdminCredential
-        // 
-        chkUseAdminCredential.AutoSize = true;
-        chkUseAdminCredential.Location = new Point(16, 75);
-        chkUseAdminCredential.Name = "chkUseAdminCredential";
-        chkUseAdminCredential.Size = new Size(190, 19);
-        chkUseAdminCredential.TabIndex = 3;
-        chkUseAdminCredential.Text = "Usar credencial administrativa";
-        chkUseAdminCredential.UseVisualStyleBackColor = true;
+        toolTip.SetToolTip(txtComputerName, "Informe o nome ou IP do computador na rede.");
         // 
         // btnLoadProfiles
         // 
-        btnLoadProfiles.Location = new Point(231, 44);
+        btnLoadProfiles.Location = new Point(238, 44);
         btnLoadProfiles.Name = "btnLoadProfiles";
         btnLoadProfiles.Size = new Size(112, 25);
         btnLoadProfiles.TabIndex = 2;
@@ -162,11 +170,11 @@ partial class MainForm
         // grpOptions
         // 
         grpOptions.Controls.Add(chkCalculateProfileSize);
-        grpOptions.Controls.Add(chkShowSystemProfiles);
-        grpOptions.Location = new Point(404, 92);
+        grpOptions.Controls.Add(chkShowAdvancedSettings);
+        grpOptions.Location = new Point(404, 120);
         grpOptions.Name = "grpOptions";
-        grpOptions.Size = new Size(320, 104);
-        grpOptions.TabIndex = 3;
+        grpOptions.Size = new Size(320, 88);
+        grpOptions.TabIndex = 4;
         grpOptions.TabStop = false;
         grpOptions.Text = "Opções";
         // 
@@ -178,42 +186,94 @@ partial class MainForm
         chkCalculateProfileSize.Size = new Size(169, 19);
         chkCalculateProfileSize.TabIndex = 0;
         chkCalculateProfileSize.Text = "Calcular tamanho dos perfis";
-        toolTip.SetToolTip(chkCalculateProfileSize, "Pode demorar em perfis grandes.");
+        toolTip.SetToolTip(chkCalculateProfileSize, "Calcula o espaço usado por cada perfil. Pode demorar em perfis grandes.");
         chkCalculateProfileSize.UseVisualStyleBackColor = true;
+        // 
+        // chkShowAdvancedSettings
+        // 
+        chkShowAdvancedSettings.AutoSize = true;
+        chkShowAdvancedSettings.Location = new Point(16, 61);
+        chkShowAdvancedSettings.Name = "chkShowAdvancedSettings";
+        chkShowAdvancedSettings.Size = new Size(203, 19);
+        chkShowAdvancedSettings.TabIndex = 1;
+        chkShowAdvancedSettings.Text = "Mostrar configurações avançadas";
+        toolTip.SetToolTip(chkShowAdvancedSettings, "Use as configurações avançadas apenas se souber o que está fazendo.");
+        chkShowAdvancedSettings.UseVisualStyleBackColor = true;
+        chkShowAdvancedSettings.CheckedChanged += ChkShowAdvancedSettings_CheckedChanged;
+        // 
+        // grpAdvancedSettings
+        // 
+        grpAdvancedSettings.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+        grpAdvancedSettings.Controls.Add(chkUseAdminCredential);
+        grpAdvancedSettings.Controls.Add(chkShowSystemProfiles);
+        grpAdvancedSettings.Controls.Add(chkShowTechnicalDetails);
+        grpAdvancedSettings.Location = new Point(28, 216);
+        grpAdvancedSettings.Name = "grpAdvancedSettings";
+        grpAdvancedSettings.Size = new Size(1040, 52);
+        grpAdvancedSettings.TabIndex = 6;
+        grpAdvancedSettings.TabStop = false;
+        grpAdvancedSettings.Text = "Configurações avançadas";
+        grpAdvancedSettings.Visible = false;
+        // 
+        // chkUseAdminCredential
+        // 
+        chkUseAdminCredential.AutoSize = true;
+        chkUseAdminCredential.Location = new Point(16, 22);
+        chkUseAdminCredential.Name = "chkUseAdminCredential";
+        chkUseAdminCredential.Size = new Size(190, 19);
+        chkUseAdminCredential.TabIndex = 0;
+        chkUseAdminCredential.Text = "Usar credencial administrativa";
+        toolTip.SetToolTip(chkUseAdminCredential, "Use apenas se sua conta atual não tiver permissão no computador remoto.");
+        chkUseAdminCredential.UseVisualStyleBackColor = true;
         // 
         // chkShowSystemProfiles
         // 
         chkShowSystemProfiles.AutoSize = true;
-        chkShowSystemProfiles.Location = new Point(16, 64);
+        chkShowSystemProfiles.Location = new Point(238, 22);
         chkShowSystemProfiles.Name = "chkShowSystemProfiles";
         chkShowSystemProfiles.Size = new Size(210, 19);
         chkShowSystemProfiles.TabIndex = 1;
         chkShowSystemProfiles.Text = "Mostrar perfis de sistema/serviço";
-        toolTip.SetToolTip(chkShowSystemProfiles, "Apenas exibe. Esses perfis continuam bloqueados.");
+        toolTip.SetToolTip(chkShowSystemProfiles, "Exibe perfis técnicos do Windows. Eles continuam bloqueados.");
         chkShowSystemProfiles.UseVisualStyleBackColor = true;
         chkShowSystemProfiles.CheckedChanged += ChkShowSystemProfiles_CheckedChanged;
+        // 
+        // chkShowTechnicalDetails
+        // 
+        chkShowTechnicalDetails.AutoSize = true;
+        chkShowTechnicalDetails.Location = new Point(490, 22);
+        chkShowTechnicalDetails.Name = "chkShowTechnicalDetails";
+        chkShowTechnicalDetails.Size = new Size(153, 19);
+        chkShowTechnicalDetails.TabIndex = 2;
+        chkShowTechnicalDetails.Text = "Mostrar detalhes técnicos";
+        toolTip.SetToolTip(chkShowTechnicalDetails, "Mostra SID, caminho completo e informações avançadas.");
+        chkShowTechnicalDetails.UseVisualStyleBackColor = true;
+        chkShowTechnicalDetails.CheckedChanged += ChkShowTechnicalDetails_CheckedChanged;
         // 
         // grpActions
         // 
         grpActions.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
         grpActions.Controls.Add(btnRemoveSelected);
         grpActions.Controls.Add(btnCancelSizeCalculation);
-        grpActions.Location = new Point(740, 92);
+        grpActions.Location = new Point(740, 120);
         grpActions.Name = "grpActions";
-        grpActions.Size = new Size(328, 104);
-        grpActions.TabIndex = 4;
+        grpActions.Size = new Size(328, 88);
+        grpActions.TabIndex = 5;
         grpActions.TabStop = false;
         grpActions.Text = "Ações";
         // 
         // btnRemoveSelected
         // 
         btnRemoveSelected.Enabled = false;
+        btnRemoveSelected.BackColor = Color.FromArgb(255, 244, 230);
+        btnRemoveSelected.FlatStyle = FlatStyle.Standard;
         btnRemoveSelected.Location = new Point(16, 31);
         btnRemoveSelected.Name = "btnRemoveSelected";
         btnRemoveSelected.Size = new Size(145, 28);
         btnRemoveSelected.TabIndex = 0;
         btnRemoveSelected.Text = "Remover selecionados";
-        btnRemoveSelected.UseVisualStyleBackColor = true;
+        toolTip.SetToolTip(btnRemoveSelected, "Remove somente perfis locais permitidos e exige confirmação.");
+        btnRemoveSelected.UseVisualStyleBackColor = false;
         btnRemoveSelected.Click += BtnRemoveSelected_Click;
         // 
         // btnCancelSizeCalculation
@@ -232,10 +292,10 @@ partial class MainForm
         grpStatus.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
         grpStatus.Controls.Add(lblStatusTitle);
         grpStatus.Controls.Add(lblStatus);
-        grpStatus.Location = new Point(28, 206);
+        grpStatus.Location = new Point(28, 276);
         grpStatus.Name = "grpStatus";
         grpStatus.Size = new Size(1040, 50);
-        grpStatus.TabIndex = 5;
+        grpStatus.TabIndex = 7;
         grpStatus.TabStop = false;
         grpStatus.Text = "Status";
         // 
@@ -261,11 +321,11 @@ partial class MainForm
         // lblLegend
         // 
         lblLegend.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-        lblLegend.Location = new Point(28, 266);
+        lblLegend.Location = new Point(28, 336);
         lblLegend.Name = "lblLegend";
         lblLegend.Size = new Size(1040, 20);
-        lblLegend.TabIndex = 6;
-        lblLegend.Text = "Legenda: branco = disponível para análise | cinza = protegido/sistema | vermelho claro = bloqueado/em uso/erro | verde = removido";
+        lblLegend.TabIndex = 8;
+        lblLegend.Text = "Legenda: branco = disponível | azul = selecionado | cinza = protegido/sistema | amarelo = atenção | vermelho = bloqueado/em uso/erro | verde = removido";
         // 
         // dgvProfiles
         // 
@@ -275,15 +335,15 @@ partial class MainForm
         dgvProfiles.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
         dgvProfiles.BackgroundColor = SystemColors.Window;
         dgvProfiles.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-        dgvProfiles.Columns.AddRange(new DataGridViewColumn[] { colSelection, colUserName, colSid, colLocalPath, colIsLoaded, colLastUseTime, colStatus, colSize, colOperationStatus, colObservation });
+        dgvProfiles.Columns.AddRange(new DataGridViewColumn[] { colSelection, colUserName, colLastUseTime, colIsLoaded, colSize, colStatus, colSid, colLocalPath, colOperationStatus, colObservation });
         dgvProfiles.EditMode = DataGridViewEditMode.EditOnEnter;
-        dgvProfiles.Location = new Point(28, 290);
+        dgvProfiles.Location = new Point(28, 360);
         dgvProfiles.MultiSelect = false;
         dgvProfiles.Name = "dgvProfiles";
         dgvProfiles.RowHeadersVisible = false;
         dgvProfiles.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-        dgvProfiles.Size = new Size(1040, 260);
-        dgvProfiles.TabIndex = 7;
+        dgvProfiles.Size = new Size(1040, 230);
+        dgvProfiles.TabIndex = 9;
         dgvProfiles.CellBeginEdit += DgvProfiles_CellBeginEdit;
         dgvProfiles.CellContentClick += DgvProfiles_CellContentClick;
         dgvProfiles.CellValueChanged += DgvProfiles_CellValueChanged;
@@ -303,7 +363,7 @@ partial class MainForm
         colUserName.HeaderText = "Perfil";
         colUserName.Name = "colUserName";
         colUserName.ReadOnly = true;
-        colUserName.Width = 130;
+        colUserName.Width = 170;
         // 
         // colSid
         // 
@@ -311,6 +371,7 @@ partial class MainForm
         colSid.HeaderText = "SID";
         colSid.Name = "colSid";
         colSid.ReadOnly = true;
+        colSid.Visible = false;
         colSid.Width = 185;
         // 
         // colLocalPath
@@ -321,6 +382,7 @@ partial class MainForm
         colLocalPath.HeaderText = "Caminho";
         colLocalPath.Name = "colLocalPath";
         colLocalPath.ReadOnly = true;
+        colLocalPath.Visible = false;
         // 
         // colIsLoaded
         // 
@@ -361,6 +423,7 @@ partial class MainForm
         colOperationStatus.HeaderText = "Resultado";
         colOperationStatus.Name = "colOperationStatus";
         colOperationStatus.ReadOnly = true;
+        colOperationStatus.Visible = false;
         colOperationStatus.Width = 115;
         // 
         // colObservation
@@ -369,25 +432,26 @@ partial class MainForm
         colObservation.HeaderText = "Observação";
         colObservation.Name = "colObservation";
         colObservation.ReadOnly = true;
+        colObservation.Visible = false;
         colObservation.Width = 120;
         // 
         // lblLogs
         // 
         lblLogs.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
         lblLogs.AutoSize = true;
-        lblLogs.Location = new Point(28, 568);
+        lblLogs.Location = new Point(28, 608);
         lblLogs.Name = "lblLogs";
         lblLogs.Size = new Size(31, 15);
-        lblLogs.TabIndex = 8;
-        lblLogs.Text = "Logs";
+        lblLogs.TabIndex = 10;
+        lblLogs.Text = "Logs técnicos - use os logs para diagnóstico técnico.";
         // 
         // btnClearLog
         // 
         btnClearLog.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-        btnClearLog.Location = new Point(900, 562);
+        btnClearLog.Location = new Point(900, 602);
         btnClearLog.Name = "btnClearLog";
         btnClearLog.Size = new Size(78, 27);
-        btnClearLog.TabIndex = 9;
+        btnClearLog.TabIndex = 11;
         btnClearLog.Text = "Limpar log";
         btnClearLog.UseVisualStyleBackColor = true;
         btnClearLog.Click += BtnClearLog_Click;
@@ -395,10 +459,10 @@ partial class MainForm
         // btnCopyLog
         // 
         btnCopyLog.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-        btnCopyLog.Location = new Point(986, 562);
+        btnCopyLog.Location = new Point(986, 602);
         btnCopyLog.Name = "btnCopyLog";
         btnCopyLog.Size = new Size(82, 27);
-        btnCopyLog.TabIndex = 10;
+        btnCopyLog.TabIndex = 12;
         btnCopyLog.Text = "Copiar log";
         btnCopyLog.UseVisualStyleBackColor = true;
         btnCopyLog.Click += BtnCopyLog_Click;
@@ -407,13 +471,13 @@ partial class MainForm
         // 
         txtLogs.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
         txtLogs.Font = new Font("Consolas", 9F);
-        txtLogs.Location = new Point(28, 595);
+        txtLogs.Location = new Point(28, 635);
         txtLogs.Multiline = true;
         txtLogs.Name = "txtLogs";
         txtLogs.ReadOnly = true;
         txtLogs.ScrollBars = ScrollBars.Vertical;
-        txtLogs.Size = new Size(1040, 135);
-        txtLogs.TabIndex = 11;
+        txtLogs.Size = new Size(1040, 95);
+        txtLogs.TabIndex = 13;
         // 
         // MainForm
         // 
@@ -427,10 +491,12 @@ partial class MainForm
         Controls.Add(dgvProfiles);
         Controls.Add(lblLegend);
         Controls.Add(grpStatus);
+        Controls.Add(grpAdvancedSettings);
         Controls.Add(grpActions);
         Controls.Add(grpOptions);
         Controls.Add(grpConnection);
         Controls.Add(lblDescription);
+        Controls.Add(lblStepsHelp);
         Controls.Add(lblTitle);
         MinimumSize = new Size(1040, 680);
         Name = "MainForm";
@@ -440,6 +506,8 @@ partial class MainForm
         grpConnection.PerformLayout();
         grpOptions.ResumeLayout(false);
         grpOptions.PerformLayout();
+        grpAdvancedSettings.ResumeLayout(false);
+        grpAdvancedSettings.PerformLayout();
         grpActions.ResumeLayout(false);
         grpStatus.ResumeLayout(false);
         grpStatus.PerformLayout();

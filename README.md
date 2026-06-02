@@ -16,6 +16,14 @@ A opção `Calcular tamanho dos perfis` usa acesso somente leitura ao compartilh
 
 A opção `Mostrar perfis de sistema/serviço` exibe perfis técnicos que ficam ocultos por padrão para manter a listagem mais limpa.
 
+## Modo simples e configurações avançadas
+
+O modo simples mostra apenas as informações necessárias para o uso diário: seleção, perfil, último uso, uso atual, tamanho e status. Esse é o modo recomendado para estagiários e técnicos novos.
+
+As configurações avançadas exibem opções e detalhes técnicos, como credencial administrativa, perfis de sistema/serviço, SID, caminho completo, resultado da remoção e observações.
+
+Perfis bloqueados continuam sem seleção e não podem ser removidos, mesmo quando os detalhes técnicos estão visíveis.
+
 Ainda não há implementação de:
 
 - exclusão de contas de usuário locais ou do domínio/AD.
