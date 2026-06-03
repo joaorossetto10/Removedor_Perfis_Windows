@@ -609,8 +609,10 @@ public partial class MainForm : Form
         }
 
         var profile = selectedProfiles[0];
+        profile.SizeDisplay = "Calculando...";
         _logService.AddInfo($"Iniciando cálculo individual de tamanho para {profile}.");
         lblStatus.Text = "calculando tamanho do perfil selecionado...";
+        dgvProfiles.Refresh();
 
         SetSizeCalculationState(isCalculating: true);
 
@@ -671,6 +673,11 @@ public partial class MainForm : Form
 
     private static string GetIndividualSizeDisplayText(ProfileSizeResult result)
     {
+        if (string.Equals(result.DisplayText, "Calculando...", StringComparison.OrdinalIgnoreCase))
+        {
+            return result.DisplayText;
+        }
+
         return result.Status switch
         {
             ProfileSizeResultStatus.AccessDenied => "Requer permissão admin",
