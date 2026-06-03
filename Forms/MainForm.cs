@@ -43,7 +43,7 @@ public partial class MainForm : Form
         ApplyTheme();
 
         _logService.EntryAdded += OnLogEntryAdded;
-        _logService.AddInfo("Aplicativo iniciado. A etapa atual permite apenas listar perfis locais via Win32_UserProfile.");
+        _logService.AddInfo("Aplicativo iniciado. Informe o computador remoto e clique em Carregar perfis.");
     }
 
     private void OnLogEntryAdded(object? sender, string entry)
