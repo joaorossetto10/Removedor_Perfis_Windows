@@ -7,6 +7,7 @@ public sealed class UserProfileInfo : INotifyPropertyChanged
 {
     private bool _isSelected;
     private string _sizeDisplay = "Não calculado";
+    private long? _sizeBytes;
     private string _operationStatus = string.Empty;
 
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -34,6 +35,12 @@ public sealed class UserProfileInfo : INotifyPropertyChanged
     {
         get => _sizeDisplay;
         set => SetField(ref _sizeDisplay, value);
+    }
+
+    public long? SizeBytes
+    {
+        get => _sizeBytes;
+        set => SetField(ref _sizeBytes, value);
     }
 
     public string OperationStatus

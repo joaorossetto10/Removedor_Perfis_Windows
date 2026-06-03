@@ -27,6 +27,8 @@ public partial class MainForm : Form
     private CancellationTokenSource? _sizeCalculationCancellation;
     private AppThemeMode _themeMode = AppThemeMode.Light;
     private ThemePalette _themePalette = ThemeHelper.GetPalette(AppThemeMode.Light);
+    private DataGridViewColumn? _currentSortColumn;
+    private ListSortDirection _currentSortDirection = ListSortDirection.Ascending;
 
     public MainForm()
     {
@@ -100,6 +102,7 @@ public partial class MainForm : Form
             foreach (var profile in profiles)
             {
                 profile.SizeDisplay = "Não calculado";
+                profile.SizeBytes = null;
                 profile.OperationStatus = string.Empty;
                 _allProfiles.Add(profile);
             }
@@ -267,6 +270,29 @@ public partial class MainForm : Form
         ApplyProfileRowStyles();
     }
 
+    private void DgvProfiles_ColumnHeaderMouseClick(object? sender, DataGridViewCellMouseEventArgs e)
+    {
+        if (e.ColumnIndex < 0 || e.ColumnIndex >= dgvProfiles.Columns.Count)
+        {
+            return;
+        }
+
+        var column = dgvProfiles.Columns[e.ColumnIndex];
+        if (dgvProfiles.IsCurrentCellDirty)
+        {
+            dgvProfiles.CommitEdit(DataGridViewDataErrorContexts.Commit);
+        }
+
+        dgvProfiles.EndEdit();
+
+        var direction = _currentSortColumn == column && _currentSortDirection == ListSortDirection.Ascending
+            ? ListSortDirection.Descending
+            : ListSortDirection.Ascending;
+
+        _logService.AddInfo($"Ordenação solicitada pela coluna {column.HeaderText}.");
+        SortVisibleProfiles(column, direction);
+    }
+
     private void ApplyProfileRowStyles()
     {
         foreach (DataGridViewRow row in dgvProfiles.Rows)
@@ -278,6 +304,10 @@ public partial class MainForm : Form
 
             row.Cells[colSelection.Index].ReadOnly = !profile.CanRemove;
             row.Cells[colSelection.Index].ToolTipText = profile.CanRemove ? string.Empty : profile.BlockReason;
+            row.Cells[colSid.Index].ToolTipText = profile.Sid;
+            row.Cells[colLocalPath.Index].ToolTipText = profile.LocalPath;
+            row.Cells[colStatus.Index].ToolTipText = profile.Status;
+            row.Cells[colObservation.Index].ToolTipText = profile.Observation;
 
             if (string.Equals(profile.OperationStatus, "Removido com sucesso", StringComparison.OrdinalIgnoreCase)
                 || string.Equals(profile.OperationStatus, "Removido", StringComparison.OrdinalIgnoreCase))
@@ -488,6 +518,11 @@ public partial class MainForm : Form
             .Where(profile => showSystemProfiles || !profile.IsHiddenByDefault)
             .ToList();
 
+        if (_currentSortColumn is not null)
+        {
+            visibleProfiles = SortProfiles(visibleProfiles, _currentSortColumn, _currentSortDirection).ToList();
+        }
+
         var hiddenSystemProfiles = _allProfiles.Count(profile => profile.IsHiddenByDefault && !showSystemProfiles);
         var visibleRemovable = visibleProfiles.Count(profile => profile.CanRemove);
         var visibleBlocked = visibleProfiles.Count - visibleRemovable;
@@ -512,7 +547,129 @@ public partial class MainForm : Form
         }
 
         UpdateRemoveButtonState();
+        ApplyDefaultColumnWidths();
         ApplyProfileRowStyles();
+        ApplySortGlyph();
+    }
+
+    private void SortVisibleProfiles(DataGridViewColumn column, ListSortDirection direction)
+    {
+        var selectedProfileKeys = _profiles
+            .Where(profile => profile.IsSelected)
+            .Select(GetProfileKey)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        var sortedProfiles = SortProfiles(_profiles.ToList(), column, direction).ToList();
+
+        _currentSortColumn = column;
+        _currentSortDirection = direction;
+
+        _profiles.Clear();
+        foreach (var profile in sortedProfiles)
+        {
+            profile.IsSelected = profile.CanRemove && selectedProfileKeys.Contains(GetProfileKey(profile));
+            _profiles.Add(profile);
+        }
+
+        ApplyProfileRowStyles();
+        ApplySortGlyph();
+        UpdateRemoveButtonState();
+    }
+
+    private IEnumerable<UserProfileInfo> SortProfiles(
+        IEnumerable<UserProfileInfo> profiles,
+        DataGridViewColumn column,
+        ListSortDirection direction)
+    {
+        var comparer = Comparer<UserProfileInfo>.Create((left, right) =>
+        {
+            var result = CompareProfiles(left, right, column);
+            return direction == ListSortDirection.Descending ? -result : result;
+        });
+
+        return profiles.OrderBy(profile => profile, comparer);
+    }
+
+    private int CompareProfiles(UserProfileInfo left, UserProfileInfo right, DataGridViewColumn column)
+    {
+        var result = column.Name switch
+        {
+            nameof(colSelection) => CompareBooleans(left.IsSelected, right.IsSelected),
+            nameof(colUserName) => CompareText(left.UserName, right.UserName),
+            nameof(colLastUseTime) => CompareNullableDates(left.LastUseTime, right.LastUseTime),
+            nameof(colIsLoaded) => CompareBooleans(left.IsLoaded, right.IsLoaded),
+            nameof(colSize) => CompareNullableLongs(left.SizeBytes, right.SizeBytes),
+            nameof(colStatus) => CompareText(left.Status, right.Status),
+            nameof(colSid) => CompareText(left.Sid, right.Sid),
+            nameof(colLocalPath) => CompareText(left.LocalPath, right.LocalPath),
+            nameof(colOperationStatus) => CompareText(left.OperationStatus, right.OperationStatus),
+            nameof(colObservation) => CompareText(left.Observation, right.Observation),
+            _ => 0
+        };
+
+        return result != 0 ? result : CompareText(left.UserName, right.UserName);
+    }
+
+    private static int CompareBooleans(bool left, bool right)
+    {
+        return left.CompareTo(right);
+    }
+
+    private static int CompareText(string left, string right)
+    {
+        return string.Compare(left, right, StringComparison.CurrentCultureIgnoreCase);
+    }
+
+    private static int CompareNullableDates(DateTime? left, DateTime? right)
+    {
+        if (left.HasValue && right.HasValue)
+        {
+            return left.Value.CompareTo(right.Value);
+        }
+
+        if (left.HasValue)
+        {
+            return -1;
+        }
+
+        return right.HasValue ? 1 : 0;
+    }
+
+    private static int CompareNullableLongs(long? left, long? right)
+    {
+        if (left.HasValue && right.HasValue)
+        {
+            return left.Value.CompareTo(right.Value);
+        }
+
+        if (left.HasValue)
+        {
+            return -1;
+        }
+
+        return right.HasValue ? 1 : 0;
+    }
+
+    private static string GetProfileKey(UserProfileInfo profile)
+    {
+        return string.IsNullOrWhiteSpace(profile.Sid) ? profile.LocalPath : profile.Sid;
+    }
+
+    private void ApplySortGlyph()
+    {
+        foreach (DataGridViewColumn column in dgvProfiles.Columns)
+        {
+            column.HeaderCell.SortGlyphDirection = SortOrder.None;
+        }
+
+        if (_currentSortColumn is null)
+        {
+            return;
+        }
+
+        _currentSortColumn.HeaderCell.SortGlyphDirection = _currentSortDirection == ListSortDirection.Ascending
+            ? SortOrder.Ascending
+            : SortOrder.Descending;
     }
 
     private static string BuildProfileSummaryText(
@@ -540,6 +697,7 @@ public partial class MainForm : Form
         var progress = new Progress<ProfileSizeResult>(result =>
         {
             result.Profile.SizeDisplay = result.DisplayText;
+            result.Profile.SizeBytes = result.Bytes;
             dgvProfiles.Refresh();
         });
 
@@ -561,6 +719,7 @@ public partial class MainForm : Form
             foreach (var profile in profiles.Where(profile => profile.SizeDisplay is "Não calculado" or "Calculando..."))
             {
                 profile.SizeDisplay = "Cancelado";
+                profile.SizeBytes = null;
             }
 
             _logService.AddWarning("Cálculo de tamanho cancelado pelo usuário.");
@@ -610,6 +769,7 @@ public partial class MainForm : Form
 
         var profile = selectedProfiles[0];
         profile.SizeDisplay = "Calculando...";
+        profile.SizeBytes = null;
         _logService.AddInfo($"Iniciando cálculo individual de tamanho para {profile}.");
         lblStatus.Text = "calculando tamanho do perfil selecionado...";
         dgvProfiles.Refresh();
@@ -622,6 +782,7 @@ public partial class MainForm : Form
         var progress = new Progress<ProfileSizeResult>(result =>
         {
             result.Profile.SizeDisplay = GetIndividualSizeDisplayText(result);
+            result.Profile.SizeBytes = result.Bytes;
             dgvProfiles.Refresh();
         });
 
@@ -643,6 +804,7 @@ public partial class MainForm : Form
         catch (OperationCanceledException)
         {
             profile.SizeDisplay = "Cancelado";
+            profile.SizeBytes = null;
             _logService.AddWarning($"Cálculo individual cancelado para {profile}.");
             lblStatus.Text = "cálculo cancelado.";
         }
@@ -720,6 +882,7 @@ public partial class MainForm : Form
 
         ApplyThemeToControls(Controls);
         ApplyGridTheme();
+        ApplyDefaultColumnWidths();
         ApplyButtonTheme(btnLoadProfiles, primary: true);
         ApplyButtonTheme(btnRemoveSelected, critical: true);
         ApplyButtonTheme(btnCalculateSelectedSize);
@@ -966,6 +1129,95 @@ public partial class MainForm : Form
         colLocalPath.Visible = showTechnicalDetails;
         colOperationStatus.Visible = showTechnicalDetails;
         colObservation.Visible = showTechnicalDetails;
+        ApplyDefaultColumnWidths();
+        ApplySortGlyph();
+    }
+
+    private void ApplyDefaultColumnWidths()
+    {
+        if (chkShowTechnicalDetails.Checked)
+        {
+            ApplyAdvancedColumnLayout();
+        }
+        else
+        {
+            ApplySimpleColumnLayout();
+        }
+
+        colSelection.Width = 70;
+        colUserName.Width = 180;
+        colLastUseTime.Width = 150;
+        colIsLoaded.Width = 80;
+        colSize.Width = 120;
+
+        colSelection.MinimumWidth = 70;
+        colUserName.MinimumWidth = 180;
+        colLastUseTime.MinimumWidth = 150;
+        colIsLoaded.MinimumWidth = 80;
+        colSize.MinimumWidth = 120;
+
+        AutoFitProfileGridColumns();
+
+        colSelection.Frozen = false;
+        colUserName.Frozen = false;
+    }
+
+    private void ApplySimpleColumnLayout()
+    {
+        dgvProfiles.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None;
+        dgvProfiles.ScrollBars = ScrollBars.Both;
+
+        colStatus.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+        colStatus.MinimumWidth = 220;
+        colStatus.FillWeight = 100F;
+    }
+
+    private void ApplyAdvancedColumnLayout()
+    {
+        dgvProfiles.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None;
+        dgvProfiles.ScrollBars = ScrollBars.Both;
+
+        colStatus.AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
+        colStatus.MinimumWidth = 220;
+
+        colSid.MinimumWidth = 260;
+        colLocalPath.MinimumWidth = 220;
+        colOperationStatus.MinimumWidth = 140;
+        colObservation.MinimumWidth = 160;
+    }
+
+    private void AutoFitProfileGridColumns()
+    {
+        if (chkShowTechnicalDetails.Checked)
+        {
+            AutoFitColumnWithinBounds(colUserName, minWidth: 140, maxWidth: 240);
+            AutoFitColumnWithinBounds(colLastUseTime, minWidth: 140, maxWidth: 160);
+            AutoFitColumnWithinBounds(colIsLoaded, minWidth: 70, maxWidth: 90);
+            AutoFitColumnWithinBounds(colSize, minWidth: 110, maxWidth: 140);
+            AutoFitColumnWithinBounds(colStatus, minWidth: 220, maxWidth: 320);
+            AutoFitColumnWithinBounds(colSid, minWidth: 260, maxWidth: 360);
+            AutoFitColumnWithinBounds(colLocalPath, minWidth: 220, maxWidth: 360);
+            AutoFitColumnWithinBounds(colOperationStatus, minWidth: 140, maxWidth: 220);
+            AutoFitColumnWithinBounds(colObservation, minWidth: 160, maxWidth: 260);
+            return;
+        }
+
+        AutoFitColumnWithinBounds(colUserName, minWidth: 140, maxWidth: 240);
+        AutoFitColumnWithinBounds(colLastUseTime, minWidth: 140, maxWidth: 150);
+        AutoFitColumnWithinBounds(colIsLoaded, minWidth: 80, maxWidth: 80);
+        AutoFitColumnWithinBounds(colSize, minWidth: 110, maxWidth: 130);
+    }
+
+    private void AutoFitColumnWithinBounds(DataGridViewColumn column, int minWidth, int maxWidth)
+    {
+        if (!column.Visible)
+        {
+            return;
+        }
+
+        column.AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
+        dgvProfiles.AutoResizeColumn(column.Index, DataGridViewAutoSizeColumnMode.DisplayedCells);
+        column.Width = Math.Clamp(column.Width, minWidth, maxWidth);
     }
 
     private void ResizeMainSections()

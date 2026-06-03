@@ -375,12 +375,14 @@ partial class MainForm
         dgvProfiles.MultiSelect = false;
         dgvProfiles.Name = "dgvProfiles";
         dgvProfiles.RowHeadersVisible = false;
+        dgvProfiles.ScrollBars = ScrollBars.Both;
         dgvProfiles.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
         dgvProfiles.Size = new Size(1040, 191);
         dgvProfiles.TabIndex = 9;
         dgvProfiles.CellBeginEdit += DgvProfiles_CellBeginEdit;
         dgvProfiles.CellContentClick += DgvProfiles_CellContentClick;
         dgvProfiles.CellValueChanged += DgvProfiles_CellValueChanged;
+        dgvProfiles.ColumnHeaderMouseClick += DgvProfiles_ColumnHeaderMouseClick;
         dgvProfiles.CurrentCellDirtyStateChanged += DgvProfiles_CurrentCellDirtyStateChanged;
         dgvProfiles.DataBindingComplete += DgvProfiles_DataBindingComplete;
         // 
@@ -389,7 +391,8 @@ partial class MainForm
         colSelection.DataPropertyName = "IsSelected";
         colSelection.HeaderText = "Seleção";
         colSelection.Name = "colSelection";
-        colSelection.Width = 65;
+        colSelection.SortMode = DataGridViewColumnSortMode.Programmatic;
+        colSelection.Width = 70;
         // 
         // colUserName
         // 
@@ -397,7 +400,8 @@ partial class MainForm
         colUserName.HeaderText = "Perfil";
         colUserName.Name = "colUserName";
         colUserName.ReadOnly = true;
-        colUserName.Width = 170;
+        colUserName.SortMode = DataGridViewColumnSortMode.Programmatic;
+        colUserName.Width = 180;
         // 
         // colSid
         // 
@@ -405,18 +409,19 @@ partial class MainForm
         colSid.HeaderText = "SID";
         colSid.Name = "colSid";
         colSid.ReadOnly = true;
+        colSid.SortMode = DataGridViewColumnSortMode.Programmatic;
         colSid.Visible = false;
-        colSid.Width = 185;
+        colSid.Width = 260;
         // 
         // colLocalPath
         // 
-        colLocalPath.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
         colLocalPath.DataPropertyName = "LocalPath";
-        colLocalPath.FillWeight = 145F;
         colLocalPath.HeaderText = "Caminho";
         colLocalPath.Name = "colLocalPath";
         colLocalPath.ReadOnly = true;
+        colLocalPath.SortMode = DataGridViewColumnSortMode.Programmatic;
         colLocalPath.Visible = false;
+        colLocalPath.Width = 220;
         // 
         // colIsLoaded
         // 
@@ -424,7 +429,8 @@ partial class MainForm
         colIsLoaded.HeaderText = "Em uso";
         colIsLoaded.Name = "colIsLoaded";
         colIsLoaded.ReadOnly = true;
-        colIsLoaded.Width = 65;
+        colIsLoaded.SortMode = DataGridViewColumnSortMode.Programmatic;
+        colIsLoaded.Width = 80;
         // 
         // colLastUseTime
         // 
@@ -432,16 +438,17 @@ partial class MainForm
         colLastUseTime.HeaderText = "Último uso";
         colLastUseTime.Name = "colLastUseTime";
         colLastUseTime.ReadOnly = true;
-        colLastUseTime.Width = 135;
+        colLastUseTime.SortMode = DataGridViewColumnSortMode.Programmatic;
+        colLastUseTime.Width = 150;
         // 
         // colStatus
         // 
-        colStatus.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
         colStatus.DataPropertyName = "Status";
-        colStatus.FillWeight = 120F;
         colStatus.HeaderText = "Status";
         colStatus.Name = "colStatus";
         colStatus.ReadOnly = true;
+        colStatus.SortMode = DataGridViewColumnSortMode.Programmatic;
+        colStatus.Width = 220;
         // 
         // colSize
         // 
@@ -449,7 +456,8 @@ partial class MainForm
         colSize.HeaderText = "Tamanho";
         colSize.Name = "colSize";
         colSize.ReadOnly = true;
-        colSize.Width = 105;
+        colSize.SortMode = DataGridViewColumnSortMode.Programmatic;
+        colSize.Width = 120;
         // 
         // colOperationStatus
         // 
@@ -457,8 +465,9 @@ partial class MainForm
         colOperationStatus.HeaderText = "Resultado";
         colOperationStatus.Name = "colOperationStatus";
         colOperationStatus.ReadOnly = true;
+        colOperationStatus.SortMode = DataGridViewColumnSortMode.Programmatic;
         colOperationStatus.Visible = false;
-        colOperationStatus.Width = 115;
+        colOperationStatus.Width = 140;
         // 
         // colObservation
         // 
@@ -466,8 +475,9 @@ partial class MainForm
         colObservation.HeaderText = "Observação";
         colObservation.Name = "colObservation";
         colObservation.ReadOnly = true;
+        colObservation.SortMode = DataGridViewColumnSortMode.Programmatic;
         colObservation.Visible = false;
-        colObservation.Width = 120;
+        colObservation.Width = 160;
         // 
         // lblLogs
         // 
