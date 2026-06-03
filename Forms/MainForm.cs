@@ -649,23 +649,44 @@ public partial class MainForm : Form
     private void ApplyButtonTheme(Button button, bool primary = false, bool critical = false)
     {
         button.FlatStyle = FlatStyle.Flat;
-        button.FlatAppearance.BorderColor = critical ? _themePalette.AccentColor : _themePalette.PrimaryButtonBackColor;
         button.FlatAppearance.BorderSize = 1;
+        button.EnabledChanged -= ThemedButton_EnabledChanged;
+        button.EnabledChanged += ThemedButton_EnabledChanged;
+
+        if (!button.Enabled)
+        {
+            button.BackColor = _themePalette.DisabledButtonBackColor;
+            button.ForeColor = _themePalette.DisabledButtonForeColor;
+            button.FlatAppearance.BorderColor = _themePalette.DisabledButtonBorderColor;
+            button.FlatAppearance.MouseOverBackColor = _themePalette.DisabledButtonBackColor;
+            button.FlatAppearance.MouseDownBackColor = _themePalette.DisabledButtonBackColor;
+            button.UseVisualStyleBackColor = false;
+            return;
+        }
 
         if (primary)
         {
             button.BackColor = _themePalette.PrimaryButtonBackColor;
             button.ForeColor = _themePalette.PrimaryButtonForeColor;
+            button.FlatAppearance.BorderColor = _themePalette.PrimaryButtonBorderColor;
+            button.FlatAppearance.MouseOverBackColor = _themePalette.PrimaryButtonHoverBackColor;
+            button.FlatAppearance.MouseDownBackColor = _themePalette.PrimaryButtonPressedBackColor;
         }
         else if (critical)
         {
             button.BackColor = _themePalette.CriticalButtonBackColor;
             button.ForeColor = _themePalette.CriticalButtonForeColor;
+            button.FlatAppearance.BorderColor = _themePalette.CriticalButtonBorderColor;
+            button.FlatAppearance.MouseOverBackColor = _themePalette.CriticalButtonHoverBackColor;
+            button.FlatAppearance.MouseDownBackColor = _themePalette.CriticalButtonPressedBackColor;
         }
         else
         {
             button.BackColor = _themePalette.SecondaryButtonBackColor;
             button.ForeColor = _themePalette.SecondaryButtonForeColor;
+            button.FlatAppearance.BorderColor = _themePalette.SecondaryButtonBorderColor;
+            button.FlatAppearance.MouseOverBackColor = _themePalette.SecondaryButtonHoverBackColor;
+            button.FlatAppearance.MouseDownBackColor = _themePalette.SecondaryButtonPressedBackColor;
         }
 
         button.UseVisualStyleBackColor = false;
@@ -679,9 +700,37 @@ public partial class MainForm : Form
             : _themePalette.PrimaryButtonBackColor;
         btnThemeToggle.ForeColor = _themeMode == AppThemeMode.Light
             ? _themePalette.TitleColor
-            : _themePalette.AccentColor;
-        btnThemeToggle.FlatAppearance.BorderColor = _themePalette.AccentColor;
+            : _themePalette.PrimaryButtonForeColor;
+        btnThemeToggle.FlatAppearance.BorderColor = _themeMode == AppThemeMode.Light
+            ? _themePalette.SecondaryButtonBorderColor
+            : _themePalette.PrimaryButtonBorderColor;
+        btnThemeToggle.FlatAppearance.MouseOverBackColor = _themeMode == AppThemeMode.Light
+            ? _themePalette.SecondaryButtonHoverBackColor
+            : _themePalette.PrimaryButtonHoverBackColor;
+        btnThemeToggle.FlatAppearance.MouseDownBackColor = _themeMode == AppThemeMode.Light
+            ? _themePalette.SecondaryButtonPressedBackColor
+            : _themePalette.PrimaryButtonPressedBackColor;
         btnThemeToggle.UseVisualStyleBackColor = false;
+    }
+
+    private void ThemedButton_EnabledChanged(object? sender, EventArgs e)
+    {
+        if (sender == btnLoadProfiles)
+        {
+            ApplyButtonTheme(btnLoadProfiles, primary: true);
+            return;
+        }
+
+        if (sender == btnRemoveSelected)
+        {
+            ApplyButtonTheme(btnRemoveSelected, critical: true);
+            return;
+        }
+
+        if (sender is Button button)
+        {
+            ApplyButtonTheme(button);
+        }
     }
 
     private void ApplyGridTheme()

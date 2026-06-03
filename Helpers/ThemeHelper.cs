@@ -13,10 +13,22 @@ public sealed class ThemePalette
     public required Color AccentColor { get; init; }
     public required Color PrimaryButtonBackColor { get; init; }
     public required Color PrimaryButtonForeColor { get; init; }
+    public required Color PrimaryButtonHoverBackColor { get; init; }
+    public required Color PrimaryButtonPressedBackColor { get; init; }
+    public required Color PrimaryButtonBorderColor { get; init; }
     public required Color SecondaryButtonBackColor { get; init; }
     public required Color SecondaryButtonForeColor { get; init; }
+    public required Color SecondaryButtonHoverBackColor { get; init; }
+    public required Color SecondaryButtonPressedBackColor { get; init; }
+    public required Color SecondaryButtonBorderColor { get; init; }
     public required Color CriticalButtonBackColor { get; init; }
     public required Color CriticalButtonForeColor { get; init; }
+    public required Color CriticalButtonHoverBackColor { get; init; }
+    public required Color CriticalButtonPressedBackColor { get; init; }
+    public required Color CriticalButtonBorderColor { get; init; }
+    public required Color DisabledButtonBackColor { get; init; }
+    public required Color DisabledButtonForeColor { get; init; }
+    public required Color DisabledButtonBorderColor { get; init; }
     public required Color GridBackColor { get; init; }
     public required Color GridForeColor { get; init; }
     public required Color GridHeaderBackColor { get; init; }
@@ -52,10 +64,22 @@ public static class ThemeHelper
         AccentColor = ColorTranslator.FromHtml("#D4AF37"),
         PrimaryButtonBackColor = ColorTranslator.FromHtml("#1E3A8A"),
         PrimaryButtonForeColor = Color.White,
-        SecondaryButtonBackColor = ColorTranslator.FromHtml("#E5E7EB"),
+        PrimaryButtonHoverBackColor = ColorTranslator.FromHtml("#2563EB"),
+        PrimaryButtonPressedBackColor = ColorTranslator.FromHtml("#1D4ED8"),
+        PrimaryButtonBorderColor = ColorTranslator.FromHtml("#1E3A8A"),
+        SecondaryButtonBackColor = ColorTranslator.FromHtml("#F9FAFB"),
         SecondaryButtonForeColor = ColorTranslator.FromHtml("#1E3A8A"),
-        CriticalButtonBackColor = ColorTranslator.FromHtml("#F5D76E"),
+        SecondaryButtonHoverBackColor = ColorTranslator.FromHtml("#E5E7EB"),
+        SecondaryButtonPressedBackColor = ColorTranslator.FromHtml("#DBEAFE"),
+        SecondaryButtonBorderColor = ColorTranslator.FromHtml("#1E3A8A"),
+        CriticalButtonBackColor = ColorTranslator.FromHtml("#D4AF37"),
         CriticalButtonForeColor = ColorTranslator.FromHtml("#111827"),
+        CriticalButtonHoverBackColor = ColorTranslator.FromHtml("#F5D76E"),
+        CriticalButtonPressedBackColor = ColorTranslator.FromHtml("#B8941F"),
+        CriticalButtonBorderColor = ColorTranslator.FromHtml("#B8941F"),
+        DisabledButtonBackColor = ColorTranslator.FromHtml("#E5E7EB"),
+        DisabledButtonForeColor = ColorTranslator.FromHtml("#6B7280"),
+        DisabledButtonBorderColor = ColorTranslator.FromHtml("#CBD5E1"),
         GridBackColor = Color.White,
         GridForeColor = ColorTranslator.FromHtml("#111827"),
         GridHeaderBackColor = ColorTranslator.FromHtml("#DBEAFE"),
@@ -84,10 +108,22 @@ public static class ThemeHelper
         AccentColor = ColorTranslator.FromHtml("#D4AF37"),
         PrimaryButtonBackColor = ColorTranslator.FromHtml("#2563EB"),
         PrimaryButtonForeColor = Color.White,
-        SecondaryButtonBackColor = ColorTranslator.FromHtml("#1E3A8A"),
-        SecondaryButtonForeColor = Color.White,
+        PrimaryButtonHoverBackColor = ColorTranslator.FromHtml("#1D4ED8"),
+        PrimaryButtonPressedBackColor = ColorTranslator.FromHtml("#1E40AF"),
+        PrimaryButtonBorderColor = ColorTranslator.FromHtml("#2563EB"),
+        SecondaryButtonBackColor = ColorTranslator.FromHtml("#1E293B"),
+        SecondaryButtonForeColor = ColorTranslator.FromHtml("#F8FAFC"),
+        SecondaryButtonHoverBackColor = ColorTranslator.FromHtml("#334155"),
+        SecondaryButtonPressedBackColor = ColorTranslator.FromHtml("#0F172A"),
+        SecondaryButtonBorderColor = ColorTranslator.FromHtml("#2563EB"),
         CriticalButtonBackColor = ColorTranslator.FromHtml("#D4AF37"),
         CriticalButtonForeColor = ColorTranslator.FromHtml("#111827"),
+        CriticalButtonHoverBackColor = ColorTranslator.FromHtml("#F5D76E"),
+        CriticalButtonPressedBackColor = ColorTranslator.FromHtml("#B8941F"),
+        CriticalButtonBorderColor = ColorTranslator.FromHtml("#D4AF37"),
+        DisabledButtonBackColor = ColorTranslator.FromHtml("#374151"),
+        DisabledButtonForeColor = ColorTranslator.FromHtml("#CBD5E1"),
+        DisabledButtonBorderColor = ColorTranslator.FromHtml("#475569"),
         GridBackColor = ColorTranslator.FromHtml("#1E293B"),
         GridForeColor = ColorTranslator.FromHtml("#F8FAFC"),
         GridHeaderBackColor = ColorTranslator.FromHtml("#1E3A8A"),
