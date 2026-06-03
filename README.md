@@ -12,7 +12,9 @@ A listagem classifica perfis comuns como disponíveis para análise e bloqueia p
 
 Também é detectado o usuário interativo logado no computador remoto quando `Win32_ComputerSystem.UserName` está disponível. Perfis com o mesmo nome desse usuário são bloqueados, mesmo que o WMI indique que não estão carregados.
 
-A opção `Calcular tamanho dos perfis` usa acesso somente leitura ao compartilhamento administrativo `C$` do computador remoto para calcular o tamanho das pastas em `C:\Users`. Essa opção fica desmarcada por padrão, roda em segundo plano, calcula um perfil por vez e pode ser cancelada pelo botão `Cancelar cálculo`.
+A opção `Calcular tamanho dos perfis` usa acesso somente leitura ao compartilhamento administrativo `C$` do computador remoto para calcular automaticamente o tamanho das pastas em `C:\Users` ao carregar a listagem. Essa opção fica desmarcada por padrão, roda em segundo plano, calcula um perfil por vez e pode ser cancelada pelo botão `Cancelar cálculo`.
+
+O botão `Calcular tamanho selecionado` permite calcular manualmente o tamanho de apenas um perfil marcado na grade, mesmo quando o cálculo automático está desativado. A ação é somente leitura, usa as mesmas regras de segurança e não altera, move ou apaga arquivos.
 
 A opção `Mostrar perfis de sistema/serviço` exibe perfis técnicos que ficam ocultos por padrão para manter a listagem mais limpa.
 
@@ -79,7 +81,7 @@ Perfis com nomes duplicados em `C:\Users` recebem observação na grade e aviso 
 
 Perfis de sistema/serviço ficam ocultos por padrão. Mesmo quando exibidos, permanecem bloqueados, não entram no cálculo de tamanho e não podem ser removidos.
 
-O cálculo de tamanho não altera arquivos. Ele ignora perfis bloqueados, junctions e links simbólicos, usa timeout por perfil e continua a listagem se algum caminho falhar. Os resultados podem aparecer como `Sem acesso ao C$`, `Tempo excedido`, `Cancelado` ou `Erro ao calcular`.
+O cálculo de tamanho não altera arquivos. Ele ignora perfis bloqueados, junctions e links simbólicos, usa timeout por perfil e continua a listagem se algum caminho falhar. Os resultados podem aparecer como `Sem acesso ao C$`, `Requer permissão admin`, `Tempo excedido`, `Cancelado` ou `Erro ao calcular`. A mensagem `Requer permissão admin` indica falta de acesso ao compartilhamento administrativo usado apenas para leitura do tamanho.
 
 Qualquer remoção usa mecanismos administrativos legítimos, como `Win32_UserProfile`, e exige confirmação explícita antes da operação.
 

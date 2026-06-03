@@ -20,6 +20,7 @@ partial class MainForm
     private CheckBox chkShowTechnicalDetails;
     private GroupBox grpActions;
     private Button btnRemoveSelected;
+    private Button btnCalculateSelectedSize;
     private Button btnCancelSizeCalculation;
     private GroupBox grpStatus;
     private Label lblStatusTitle;
@@ -58,13 +59,13 @@ partial class MainForm
     {
         components = new System.ComponentModel.Container();
         lblTitle = new Label();
-        btnThemeToggle = new Button();
+        btnThemeToggle = new RemovedorPerfisWindows.Controls.ThemedButton();
         lblDescription = new Label();
         lblStepsHelp = new Label();
         grpConnection = new GroupBox();
         lblComputerName = new Label();
         txtComputerName = new TextBox();
-        btnLoadProfiles = new Button();
+        btnLoadProfiles = new RemovedorPerfisWindows.Controls.ThemedButton();
         grpOptions = new GroupBox();
         chkCalculateProfileSize = new CheckBox();
         chkShowAdvancedSettings = new CheckBox();
@@ -73,8 +74,9 @@ partial class MainForm
         chkShowSystemProfiles = new CheckBox();
         chkShowTechnicalDetails = new CheckBox();
         grpActions = new GroupBox();
-        btnRemoveSelected = new Button();
-        btnCancelSizeCalculation = new Button();
+        btnRemoveSelected = new RemovedorPerfisWindows.Controls.ThemedButton();
+        btnCalculateSelectedSize = new RemovedorPerfisWindows.Controls.ThemedButton();
+        btnCancelSizeCalculation = new RemovedorPerfisWindows.Controls.ThemedButton();
         grpStatus = new GroupBox();
         lblStatusTitle = new Label();
         lblStatus = new Label();
@@ -91,8 +93,8 @@ partial class MainForm
         colOperationStatus = new DataGridViewTextBoxColumn();
         colObservation = new DataGridViewTextBoxColumn();
         lblLogs = new Label();
-        btnClearLog = new Button();
-        btnCopyLog = new Button();
+        btnClearLog = new RemovedorPerfisWindows.Controls.ThemedButton();
+        btnCopyLog = new RemovedorPerfisWindows.Controls.ThemedButton();
         lblAuthor = new Label();
         txtLogs = new TextBox();
         toolTip = new ToolTip(components);
@@ -153,7 +155,7 @@ partial class MainForm
         grpConnection.Controls.Add(btnLoadProfiles);
         grpConnection.Location = new Point(28, 120);
         grpConnection.Name = "grpConnection";
-        grpConnection.Size = new Size(360, 88);
+        grpConnection.Size = new Size(360, 104);
         grpConnection.TabIndex = 3;
         grpConnection.TabStop = false;
         grpConnection.Text = "Conexão";
@@ -161,7 +163,7 @@ partial class MainForm
         // lblComputerName
         // 
         lblComputerName.AutoSize = true;
-        lblComputerName.Location = new Point(16, 26);
+        lblComputerName.Location = new Point(16, 30);
         lblComputerName.Name = "lblComputerName";
         lblComputerName.Size = new Size(120, 15);
         lblComputerName.TabIndex = 0;
@@ -169,7 +171,7 @@ partial class MainForm
         // 
         // txtComputerName
         // 
-        txtComputerName.Location = new Point(16, 45);
+        txtComputerName.Location = new Point(16, 53);
         txtComputerName.Name = "txtComputerName";
         txtComputerName.Size = new Size(210, 23);
         txtComputerName.TabIndex = 1;
@@ -177,7 +179,7 @@ partial class MainForm
         // 
         // btnLoadProfiles
         // 
-        btnLoadProfiles.Location = new Point(238, 44);
+        btnLoadProfiles.Location = new Point(238, 52);
         btnLoadProfiles.Name = "btnLoadProfiles";
         btnLoadProfiles.Size = new Size(112, 25);
         btnLoadProfiles.TabIndex = 2;
@@ -191,7 +193,7 @@ partial class MainForm
         grpOptions.Controls.Add(chkShowAdvancedSettings);
         grpOptions.Location = new Point(404, 120);
         grpOptions.Name = "grpOptions";
-        grpOptions.Size = new Size(320, 88);
+        grpOptions.Size = new Size(320, 104);
         grpOptions.TabIndex = 4;
         grpOptions.TabStop = false;
         grpOptions.Text = "Opções";
@@ -199,7 +201,7 @@ partial class MainForm
         // chkCalculateProfileSize
         // 
         chkCalculateProfileSize.AutoSize = true;
-        chkCalculateProfileSize.Location = new Point(16, 31);
+        chkCalculateProfileSize.Location = new Point(16, 35);
         chkCalculateProfileSize.Name = "chkCalculateProfileSize";
         chkCalculateProfileSize.Size = new Size(169, 19);
         chkCalculateProfileSize.TabIndex = 0;
@@ -210,7 +212,7 @@ partial class MainForm
         // chkShowAdvancedSettings
         // 
         chkShowAdvancedSettings.AutoSize = true;
-        chkShowAdvancedSettings.Location = new Point(16, 61);
+        chkShowAdvancedSettings.Location = new Point(16, 68);
         chkShowAdvancedSettings.Name = "chkShowAdvancedSettings";
         chkShowAdvancedSettings.Size = new Size(203, 19);
         chkShowAdvancedSettings.TabIndex = 1;
@@ -225,7 +227,7 @@ partial class MainForm
         grpAdvancedSettings.Controls.Add(chkUseAdminCredential);
         grpAdvancedSettings.Controls.Add(chkShowSystemProfiles);
         grpAdvancedSettings.Controls.Add(chkShowTechnicalDetails);
-        grpAdvancedSettings.Location = new Point(28, 216);
+        grpAdvancedSettings.Location = new Point(28, 232);
         grpAdvancedSettings.Name = "grpAdvancedSettings";
         grpAdvancedSettings.Size = new Size(1040, 52);
         grpAdvancedSettings.TabIndex = 6;
@@ -271,11 +273,12 @@ partial class MainForm
         // grpActions
         // 
         grpActions.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+        grpActions.Controls.Add(btnCalculateSelectedSize);
         grpActions.Controls.Add(btnRemoveSelected);
         grpActions.Controls.Add(btnCancelSizeCalculation);
         grpActions.Location = new Point(740, 120);
         grpActions.Name = "grpActions";
-        grpActions.Size = new Size(328, 88);
+        grpActions.Size = new Size(328, 104);
         grpActions.TabIndex = 5;
         grpActions.TabStop = false;
         grpActions.Text = "Ações";
@@ -285,23 +288,36 @@ partial class MainForm
         btnRemoveSelected.Enabled = false;
         btnRemoveSelected.BackColor = Color.FromArgb(255, 244, 230);
         btnRemoveSelected.FlatStyle = FlatStyle.Standard;
-        btnRemoveSelected.Location = new Point(16, 31);
+        btnRemoveSelected.Location = new Point(16, 27);
         btnRemoveSelected.Name = "btnRemoveSelected";
-        btnRemoveSelected.Size = new Size(145, 28);
+        btnRemoveSelected.Size = new Size(144, 28);
         btnRemoveSelected.TabIndex = 0;
-        btnRemoveSelected.Text = "Remover selecionados";
-        toolTip.SetToolTip(btnRemoveSelected, "Remove somente perfis locais permitidos e exige confirmação.");
+        btnRemoveSelected.Text = "Remover";
+        toolTip.SetToolTip(btnRemoveSelected, "Remove os perfis selecionados com confirmação.");
         btnRemoveSelected.UseVisualStyleBackColor = false;
         btnRemoveSelected.Click += BtnRemoveSelected_Click;
+        // 
+        // btnCalculateSelectedSize
+        // 
+        btnCalculateSelectedSize.Enabled = false;
+        btnCalculateSelectedSize.Location = new Point(16, 66);
+        btnCalculateSelectedSize.Name = "btnCalculateSelectedSize";
+        btnCalculateSelectedSize.Size = new Size(300, 28);
+        btnCalculateSelectedSize.TabIndex = 2;
+        btnCalculateSelectedSize.Text = "Calcular perfil";
+        toolTip.SetToolTip(btnCalculateSelectedSize, "Calcula o tamanho apenas do perfil selecionado.");
+        btnCalculateSelectedSize.UseVisualStyleBackColor = true;
+        btnCalculateSelectedSize.Click += BtnCalculateSelectedSize_Click;
         // 
         // btnCancelSizeCalculation
         // 
         btnCancelSizeCalculation.Enabled = false;
-        btnCancelSizeCalculation.Location = new Point(174, 31);
+        btnCancelSizeCalculation.Location = new Point(172, 27);
         btnCancelSizeCalculation.Name = "btnCancelSizeCalculation";
-        btnCancelSizeCalculation.Size = new Size(130, 28);
+        btnCancelSizeCalculation.Size = new Size(144, 28);
         btnCancelSizeCalculation.TabIndex = 1;
-        btnCancelSizeCalculation.Text = "Cancelar cálculo";
+        btnCancelSizeCalculation.Text = "Cancelar";
+        toolTip.SetToolTip(btnCancelSizeCalculation, "Cancela o cálculo de tamanho em andamento.");
         btnCancelSizeCalculation.UseVisualStyleBackColor = true;
         btnCancelSizeCalculation.Click += BtnCancelSizeCalculation_Click;
         // 
@@ -310,7 +326,7 @@ partial class MainForm
         grpStatus.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
         grpStatus.Controls.Add(lblStatusTitle);
         grpStatus.Controls.Add(lblStatus);
-        grpStatus.Location = new Point(28, 276);
+        grpStatus.Location = new Point(28, 292);
         grpStatus.Name = "grpStatus";
         grpStatus.Size = new Size(1040, 50);
         grpStatus.TabIndex = 7;

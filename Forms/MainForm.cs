@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using RemovedorPerfisWindows.Controls;
 using RemovedorPerfisWindows.Helpers;
 using RemovedorPerfisWindows.Models;
 using RemovedorPerfisWindows.Services;
@@ -7,8 +8,8 @@ namespace RemovedorPerfisWindows.Forms;
 
 public partial class MainForm : Form
 {
-    private const int CollapsedStatusTop = 216;
-    private const int ExpandedStatusTop = 276;
+    private const int CollapsedStatusTop = 232;
+    private const int ExpandedStatusTop = 292;
     private const int LegendGap = 10;
     private const int GridGap = 4;
     private const int LogsGap = 12;
@@ -187,6 +188,7 @@ public partial class MainForm : Form
         chkShowTechnicalDetails.Enabled = !isLoading;
         btnCancelSizeCalculation.Enabled = false;
         btnRemoveSelected.Enabled = !isLoading && HasSelectedRemovableProfiles();
+        btnCalculateSelectedSize.Enabled = !isLoading && HasSingleSelectedSizeCalculationProfile();
         UseWaitCursor = isLoading;
 
         if (isLoading)
@@ -437,6 +439,7 @@ public partial class MainForm : Form
     {
         btnLoadProfiles.Enabled = !isRemoving;
         btnRemoveSelected.Enabled = !isRemoving && HasSelectedRemovableProfiles();
+        btnCalculateSelectedSize.Enabled = !isRemoving && HasSingleSelectedSizeCalculationProfile();
         btnCancelSizeCalculation.Enabled = false;
         txtComputerName.Enabled = !isRemoving;
         chkUseAdminCredential.Enabled = !isRemoving;
@@ -451,11 +454,31 @@ public partial class MainForm : Form
     private void UpdateRemoveButtonState()
     {
         btnRemoveSelected.Enabled = HasSelectedRemovableProfiles();
+        btnCalculateSelectedSize.Enabled = HasSingleSelectedSizeCalculationProfile();
     }
 
     private bool HasSelectedRemovableProfiles()
     {
         return _profiles.Any(profile => profile.IsSelected && profile.CanRemove);
+    }
+
+    private bool HasSingleSelectedSizeCalculationProfile()
+    {
+        return GetSelectedSizeCalculationProfiles().Count == 1;
+    }
+
+    private List<UserProfileInfo> GetSelectedSizeCalculationProfiles()
+    {
+        return _profiles
+            .Where(profile => profile.IsSelected && CanCalculateProfileSize(profile))
+            .ToList();
+    }
+
+    private static bool CanCalculateProfileSize(UserProfileInfo profile)
+    {
+        return profile.CanRemove
+            && !profile.IsSystemOrServiceProfile
+            && UserProfileSafetyHelper.IsUsersProfilePath(profile.LocalPath);
     }
 
     private void ApplyProfileVisibilityFilter()
@@ -546,9 +569,115 @@ public partial class MainForm : Form
         finally
         {
             btnCancelSizeCalculation.Enabled = false;
+            UpdateRemoveButtonState();
             _sizeCalculationCancellation.Dispose();
             _sizeCalculationCancellation = null;
         }
+    }
+
+    private async void BtnCalculateSelectedSize_Click(object? sender, EventArgs e)
+    {
+        var computerName = txtComputerName.Text.Trim();
+        if (string.IsNullOrWhiteSpace(computerName))
+        {
+            _logService.AddWarning("Informe o nome do computador remoto antes de calcular o tamanho do perfil selecionado.");
+            return;
+        }
+
+        var selectedProfiles = GetSelectedSizeCalculationProfiles();
+        if (selectedProfiles.Count != 1)
+        {
+            lblStatus.Text = "selecione exatamente um perfil disponível para calcular o tamanho.";
+            _logService.AddWarning("Cálculo individual não iniciado: selecione exatamente um perfil disponível.");
+            UpdateRemoveButtonState();
+            return;
+        }
+
+        AdminCredentialInfo? credential = null;
+
+        if (chkUseAdminCredential.Checked)
+        {
+            using var credentialForm = new CredentialForm();
+            if (credentialForm.ShowDialog(this) != DialogResult.OK || credentialForm.Credential is null)
+            {
+                _logService.AddWarning("Credencial administrativa cancelada. Cálculo individual cancelado.");
+                lblStatus.Text = "cálculo cancelado.";
+                return;
+            }
+
+            credential = credentialForm.Credential;
+        }
+
+        var profile = selectedProfiles[0];
+        _logService.AddInfo($"Iniciando cálculo individual de tamanho para {profile}.");
+        lblStatus.Text = "calculando tamanho do perfil selecionado...";
+
+        SetSizeCalculationState(isCalculating: true);
+
+        _sizeCalculationCancellation?.Dispose();
+        _sizeCalculationCancellation = new CancellationTokenSource();
+
+        var progress = new Progress<ProfileSizeResult>(result =>
+        {
+            result.Profile.SizeDisplay = GetIndividualSizeDisplayText(result);
+            dgvProfiles.Refresh();
+        });
+
+        try
+        {
+            await _profileSizeService.CalculateSizesAsync(
+                computerName,
+                selectedProfiles,
+                credential,
+                progress,
+                _sizeCalculationCancellation.Token);
+
+            lblStatus.Text = _sizeCalculationCancellation.IsCancellationRequested
+                ? "cálculo cancelado."
+                : "tamanho calculado para o perfil selecionado.";
+
+            _logService.AddInfo($"Cálculo individual concluído para {profile}: {profile.SizeDisplay}.");
+        }
+        catch (OperationCanceledException)
+        {
+            profile.SizeDisplay = "Cancelado";
+            _logService.AddWarning($"Cálculo individual cancelado para {profile}.");
+            lblStatus.Text = "cálculo cancelado.";
+        }
+        finally
+        {
+            credential?.Clear();
+            _sizeCalculationCancellation.Dispose();
+            _sizeCalculationCancellation = null;
+            SetSizeCalculationState(isCalculating: false);
+            UpdateRemoveButtonState();
+        }
+    }
+
+    private void SetSizeCalculationState(bool isCalculating)
+    {
+        btnLoadProfiles.Enabled = !isCalculating;
+        btnRemoveSelected.Enabled = !isCalculating && HasSelectedRemovableProfiles();
+        btnCalculateSelectedSize.Enabled = false;
+        btnCancelSizeCalculation.Enabled = isCalculating;
+        txtComputerName.Enabled = !isCalculating;
+        chkUseAdminCredential.Enabled = !isCalculating;
+        chkCalculateProfileSize.Enabled = !isCalculating;
+        chkShowAdvancedSettings.Enabled = !isCalculating;
+        chkShowSystemProfiles.Enabled = !isCalculating;
+        chkShowTechnicalDetails.Enabled = !isCalculating;
+        UseWaitCursor = isCalculating;
+    }
+
+    private static string GetIndividualSizeDisplayText(ProfileSizeResult result)
+    {
+        return result.Status switch
+        {
+            ProfileSizeResultStatus.AccessDenied => "Requer permissão admin",
+            ProfileSizeResultStatus.Error => "Não foi possível calcular",
+            ProfileSizeResultStatus.Ignored => "Não aplicável",
+            _ => result.DisplayText
+        };
     }
 
     private void BtnClearLog_Click(object? sender, EventArgs e)
@@ -586,6 +715,7 @@ public partial class MainForm : Form
         ApplyGridTheme();
         ApplyButtonTheme(btnLoadProfiles, primary: true);
         ApplyButtonTheme(btnRemoveSelected, critical: true);
+        ApplyButtonTheme(btnCalculateSelectedSize);
         ApplyButtonTheme(btnCancelSizeCalculation);
         ApplyButtonTheme(btnClearLog);
         ApplyButtonTheme(btnCopyLog);
@@ -660,6 +790,13 @@ public partial class MainForm : Form
             button.FlatAppearance.BorderColor = _themePalette.DisabledButtonBorderColor;
             button.FlatAppearance.MouseOverBackColor = _themePalette.DisabledButtonBackColor;
             button.FlatAppearance.MouseDownBackColor = _themePalette.DisabledButtonBackColor;
+            ApplyThemedButtonColors(
+                button,
+                _themePalette.DisabledButtonBackColor,
+                _themePalette.DisabledButtonForeColor,
+                _themePalette.DisabledButtonBorderColor,
+                _themePalette.DisabledButtonBackColor,
+                _themePalette.DisabledButtonBackColor);
             button.UseVisualStyleBackColor = false;
             return;
         }
@@ -671,6 +808,13 @@ public partial class MainForm : Form
             button.FlatAppearance.BorderColor = _themePalette.PrimaryButtonBorderColor;
             button.FlatAppearance.MouseOverBackColor = _themePalette.PrimaryButtonHoverBackColor;
             button.FlatAppearance.MouseDownBackColor = _themePalette.PrimaryButtonPressedBackColor;
+            ApplyThemedButtonColors(
+                button,
+                _themePalette.PrimaryButtonBackColor,
+                _themePalette.PrimaryButtonForeColor,
+                _themePalette.PrimaryButtonBorderColor,
+                _themePalette.PrimaryButtonHoverBackColor,
+                _themePalette.PrimaryButtonPressedBackColor);
         }
         else if (critical)
         {
@@ -679,6 +823,13 @@ public partial class MainForm : Form
             button.FlatAppearance.BorderColor = _themePalette.CriticalButtonBorderColor;
             button.FlatAppearance.MouseOverBackColor = _themePalette.CriticalButtonHoverBackColor;
             button.FlatAppearance.MouseDownBackColor = _themePalette.CriticalButtonPressedBackColor;
+            ApplyThemedButtonColors(
+                button,
+                _themePalette.CriticalButtonBackColor,
+                _themePalette.CriticalButtonForeColor,
+                _themePalette.CriticalButtonBorderColor,
+                _themePalette.CriticalButtonHoverBackColor,
+                _themePalette.CriticalButtonPressedBackColor);
         }
         else
         {
@@ -687,9 +838,40 @@ public partial class MainForm : Form
             button.FlatAppearance.BorderColor = _themePalette.SecondaryButtonBorderColor;
             button.FlatAppearance.MouseOverBackColor = _themePalette.SecondaryButtonHoverBackColor;
             button.FlatAppearance.MouseDownBackColor = _themePalette.SecondaryButtonPressedBackColor;
+            ApplyThemedButtonColors(
+                button,
+                _themePalette.SecondaryButtonBackColor,
+                _themePalette.SecondaryButtonForeColor,
+                _themePalette.SecondaryButtonBorderColor,
+                _themePalette.SecondaryButtonHoverBackColor,
+                _themePalette.SecondaryButtonPressedBackColor);
         }
 
         button.UseVisualStyleBackColor = false;
+    }
+
+    private void ApplyThemedButtonColors(
+        Button button,
+        Color backColor,
+        Color foreColor,
+        Color borderColor,
+        Color hoverBackColor,
+        Color pressedBackColor)
+    {
+        if (button is not ThemedButton themedButton)
+        {
+            return;
+        }
+
+        themedButton.BackColor = backColor;
+        themedButton.ForeColor = foreColor;
+        themedButton.ButtonBorderColor = borderColor;
+        themedButton.HoverBackColor = hoverBackColor;
+        themedButton.PressedBackColor = pressedBackColor;
+        themedButton.DisabledBackColor = _themePalette.DisabledButtonBackColor;
+        themedButton.DisabledForeColor = _themePalette.DisabledButtonForeColor;
+        themedButton.DisabledBorderColor = _themePalette.DisabledButtonBorderColor;
+        themedButton.Invalidate();
     }
 
     private void ApplyThemeToggleButton()
@@ -710,6 +892,13 @@ public partial class MainForm : Form
         btnThemeToggle.FlatAppearance.MouseDownBackColor = _themeMode == AppThemeMode.Light
             ? _themePalette.SecondaryButtonPressedBackColor
             : _themePalette.PrimaryButtonPressedBackColor;
+        ApplyThemedButtonColors(
+            btnThemeToggle,
+            btnThemeToggle.BackColor,
+            btnThemeToggle.ForeColor,
+            btnThemeToggle.FlatAppearance.BorderColor,
+            btnThemeToggle.FlatAppearance.MouseOverBackColor,
+            btnThemeToggle.FlatAppearance.MouseDownBackColor);
         btnThemeToggle.UseVisualStyleBackColor = false;
     }
 
