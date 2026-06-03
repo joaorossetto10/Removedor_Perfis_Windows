@@ -7,15 +7,6 @@ namespace RemovedorPerfisWindows.Forms;
 
 public partial class MainForm : Form
 {
-    private static readonly Color AvailableRowColor = Color.White;
-    private static readonly Color SelectedForActionRowColor = Color.FromArgb(225, 240, 255);
-    private static readonly Color ProtectedRowColor = Color.FromArgb(242, 242, 242);
-    private static readonly Color AttentionRowColor = Color.FromArgb(255, 249, 219);
-    private static readonly Color LoadedRowColor = Color.FromArgb(255, 226, 226);
-    private static readonly Color RemovedRowColor = Color.FromArgb(225, 246, 225);
-    private static readonly Color SkippedRowColor = Color.FromArgb(255, 242, 204);
-    private static readonly Color ErrorRowColor = Color.FromArgb(255, 222, 222);
-
     private const int CollapsedStatusTop = 216;
     private const int ExpandedStatusTop = 276;
     private const int LegendGap = 10;
@@ -32,10 +23,13 @@ public partial class MainForm : Form
     private ProfileSizeService _profileSizeService = null!;
     private UserProfileRemovalService _userProfileRemovalService = null!;
     private CancellationTokenSource? _sizeCalculationCancellation;
+    private AppThemeMode _themeMode = AppThemeMode.Light;
+    private ThemePalette _themePalette = ThemeHelper.GetPalette(AppThemeMode.Light);
 
     public MainForm()
     {
         InitializeComponent();
+        Icon = SystemIcons.Shield;
 
         _userProfileQueryService = new UserProfileQueryService(_logService);
         _profileSizeService = new ProfileSizeService(_logService);
@@ -44,6 +38,7 @@ public partial class MainForm : Form
         dgvProfiles.DataSource = _profiles;
         ApplyAdvancedSettingsVisibility();
         ApplyTechnicalColumnsVisibility();
+        ApplyTheme();
 
         _logService.EntryAdded += OnLogEntryAdded;
         _logService.AddInfo("Aplicativo iniciado. A etapa atual permite apenas listar perfis locais via Win32_UserProfile.");
@@ -284,47 +279,50 @@ public partial class MainForm : Form
             if (string.Equals(profile.OperationStatus, "Removido com sucesso", StringComparison.OrdinalIgnoreCase)
                 || string.Equals(profile.OperationStatus, "Removido", StringComparison.OrdinalIgnoreCase))
             {
-                row.DefaultCellStyle.BackColor = RemovedRowColor;
-                row.DefaultCellStyle.SelectionBackColor = Color.FromArgb(140, 210, 140);
+                row.DefaultCellStyle.BackColor = _themePalette.RemovedRowColor;
+                row.DefaultCellStyle.SelectionBackColor = _themePalette.GridSelectionBackColor;
             }
             else if (string.Equals(profile.OperationStatus, "Ignorado", StringComparison.OrdinalIgnoreCase)
                 || string.Equals(profile.OperationStatus, "Não confirmado", StringComparison.OrdinalIgnoreCase))
             {
-                row.DefaultCellStyle.BackColor = SkippedRowColor;
-                row.DefaultCellStyle.SelectionBackColor = Color.FromArgb(230, 190, 110);
+                row.DefaultCellStyle.BackColor = _themePalette.AttentionRowColor;
+                row.DefaultCellStyle.SelectionBackColor = _themePalette.GridSelectionBackColor;
             }
             else if (string.Equals(profile.OperationStatus, "Erro ao remover", StringComparison.OrdinalIgnoreCase))
             {
-                row.DefaultCellStyle.BackColor = ErrorRowColor;
-                row.DefaultCellStyle.SelectionBackColor = Color.FromArgb(220, 150, 150);
+                row.DefaultCellStyle.BackColor = _themePalette.BlockedRowColor;
+                row.DefaultCellStyle.SelectionBackColor = _themePalette.GridSelectionBackColor;
             }
             else if (profile.IsSelected && profile.CanRemove)
             {
-                row.DefaultCellStyle.BackColor = SelectedForActionRowColor;
-                row.DefaultCellStyle.SelectionBackColor = Color.FromArgb(145, 190, 235);
+                row.DefaultCellStyle.BackColor = _themePalette.SelectedForActionRowColor;
+                row.DefaultCellStyle.SelectionBackColor = _themePalette.GridSelectionBackColor;
             }
             else if (profile.Observation.Contains("Nome duplicado", StringComparison.OrdinalIgnoreCase))
             {
-                row.DefaultCellStyle.BackColor = AttentionRowColor;
-                row.DefaultCellStyle.SelectionBackColor = Color.FromArgb(230, 205, 120);
+                row.DefaultCellStyle.BackColor = _themePalette.AttentionRowColor;
+                row.DefaultCellStyle.SelectionBackColor = _themePalette.GridSelectionBackColor;
             }
             else if (profile.IsLoaded)
             {
-                row.DefaultCellStyle.BackColor = LoadedRowColor;
-                row.DefaultCellStyle.SelectionBackColor = Color.FromArgb(220, 160, 160);
+                row.DefaultCellStyle.BackColor = _themePalette.BlockedRowColor;
+                row.DefaultCellStyle.SelectionBackColor = _themePalette.GridSelectionBackColor;
             }
             else if (!profile.CanRemove)
             {
                 row.DefaultCellStyle.BackColor = profile.IsSystemOrServiceProfile || profile.BlockReason.Contains("protegido", StringComparison.OrdinalIgnoreCase)
-                    ? ProtectedRowColor
-                    : LoadedRowColor;
-                row.DefaultCellStyle.SelectionBackColor = Color.FromArgb(205, 205, 205);
+                    ? _themePalette.ProtectedRowColor
+                    : _themePalette.BlockedRowColor;
+                row.DefaultCellStyle.SelectionBackColor = _themePalette.GridSelectionBackColor;
             }
             else
             {
-                row.DefaultCellStyle.BackColor = AvailableRowColor;
-                row.DefaultCellStyle.SelectionBackColor = SystemColors.Highlight;
+                row.DefaultCellStyle.BackColor = _themePalette.AvailableRowColor;
+                row.DefaultCellStyle.SelectionBackColor = _themePalette.GridSelectionBackColor;
             }
+
+            row.DefaultCellStyle.ForeColor = _themePalette.GridForeColor;
+            row.DefaultCellStyle.SelectionForeColor = _themePalette.GridSelectionForeColor;
         }
     }
 
@@ -570,6 +568,140 @@ public partial class MainForm : Form
         _logService.AddInfo("Log copiado para a área de transferência.");
     }
 
+    private void BtnThemeToggle_Click(object? sender, EventArgs e)
+    {
+        _themeMode = _themeMode == AppThemeMode.Light ? AppThemeMode.Dark : AppThemeMode.Light;
+        ApplyTheme();
+    }
+
+    private void ApplyTheme()
+    {
+        _themePalette = ThemeHelper.GetPalette(_themeMode);
+
+        BackColor = _themePalette.FormBackColor;
+        ForeColor = _themePalette.TextColor;
+
+        ApplyThemeToControls(Controls);
+        ApplyGridTheme();
+        ApplyButtonTheme(btnLoadProfiles, primary: true);
+        ApplyButtonTheme(btnRemoveSelected, critical: true);
+        ApplyButtonTheme(btnCancelSizeCalculation);
+        ApplyButtonTheme(btnClearLog);
+        ApplyButtonTheme(btnCopyLog);
+        ApplyThemeToggleButton();
+
+        lblTitle.ForeColor = _themePalette.TitleColor;
+        lblTitle.Font = new Font(lblTitle.Font, FontStyle.Bold);
+        lblDescription.ForeColor = _themePalette.MutedTextColor;
+        lblStepsHelp.ForeColor = _themePalette.MutedTextColor;
+        lblLegend.ForeColor = _themePalette.MutedTextColor;
+        lblAuthor.ForeColor = _themeMode == AppThemeMode.Dark ? _themePalette.AccentColor : _themePalette.TitleColor;
+        lblAuthor.Font = new Font(lblAuthor.Font, FontStyle.Regular);
+        lblStatusTitle.Font = new Font(lblStatusTitle.Font, FontStyle.Bold);
+        lblLogs.Font = new Font(lblLogs.Font, FontStyle.Bold);
+        txtLogs.BackColor = _themePalette.LogBackColor;
+        txtLogs.ForeColor = _themePalette.LogForeColor;
+
+        ApplyProfileRowStyles();
+    }
+
+    private void ApplyThemeToControls(Control.ControlCollection controls)
+    {
+        foreach (Control control in controls)
+        {
+            switch (control)
+            {
+                case GroupBox groupBox:
+                    groupBox.BackColor = _themePalette.PanelBackColor;
+                    groupBox.ForeColor = _themePalette.TextColor;
+                    groupBox.Font = new Font(groupBox.Font, FontStyle.Bold);
+                    break;
+                case Label label:
+                    label.BackColor = Color.Transparent;
+                    label.ForeColor = _themePalette.TextColor;
+                    label.Font = new Font(label.Font, FontStyle.Regular);
+                    break;
+                case TextBox textBox:
+                    textBox.BackColor = _themePalette.InputBackColor;
+                    textBox.ForeColor = _themePalette.TextColor;
+                    textBox.BorderStyle = BorderStyle.FixedSingle;
+                    textBox.Font = new Font(textBox.Font, FontStyle.Regular);
+                    break;
+                case CheckBox checkBox:
+                    checkBox.BackColor = _themePalette.PanelBackColor;
+                    checkBox.ForeColor = _themePalette.TextColor;
+                    checkBox.Font = new Font(checkBox.Font, FontStyle.Regular);
+                    break;
+                case Button button:
+                    button.Font = new Font(button.Font, FontStyle.Regular);
+                    ApplyButtonTheme(button);
+                    break;
+            }
+
+            if (control.HasChildren)
+            {
+                ApplyThemeToControls(control.Controls);
+            }
+        }
+    }
+
+    private void ApplyButtonTheme(Button button, bool primary = false, bool critical = false)
+    {
+        button.FlatStyle = FlatStyle.Flat;
+        button.FlatAppearance.BorderColor = critical ? _themePalette.AccentColor : _themePalette.PrimaryButtonBackColor;
+        button.FlatAppearance.BorderSize = 1;
+
+        if (primary)
+        {
+            button.BackColor = _themePalette.PrimaryButtonBackColor;
+            button.ForeColor = _themePalette.PrimaryButtonForeColor;
+        }
+        else if (critical)
+        {
+            button.BackColor = _themePalette.CriticalButtonBackColor;
+            button.ForeColor = _themePalette.CriticalButtonForeColor;
+        }
+        else
+        {
+            button.BackColor = _themePalette.SecondaryButtonBackColor;
+            button.ForeColor = _themePalette.SecondaryButtonForeColor;
+        }
+
+        button.UseVisualStyleBackColor = false;
+    }
+
+    private void ApplyThemeToggleButton()
+    {
+        btnThemeToggle.Text = _themeMode == AppThemeMode.Light ? "☾" : "☀";
+        btnThemeToggle.BackColor = _themeMode == AppThemeMode.Light
+            ? _themePalette.SecondaryButtonBackColor
+            : _themePalette.PrimaryButtonBackColor;
+        btnThemeToggle.ForeColor = _themeMode == AppThemeMode.Light
+            ? _themePalette.TitleColor
+            : _themePalette.AccentColor;
+        btnThemeToggle.FlatAppearance.BorderColor = _themePalette.AccentColor;
+        btnThemeToggle.UseVisualStyleBackColor = false;
+    }
+
+    private void ApplyGridTheme()
+    {
+        dgvProfiles.EnableHeadersVisualStyles = false;
+        dgvProfiles.BackgroundColor = _themePalette.GridBackColor;
+        dgvProfiles.GridColor = _themePalette.GridLineColor;
+        dgvProfiles.BorderStyle = BorderStyle.FixedSingle;
+        dgvProfiles.ColumnHeadersDefaultCellStyle.BackColor = _themePalette.GridHeaderBackColor;
+        dgvProfiles.ColumnHeadersDefaultCellStyle.ForeColor = _themePalette.GridHeaderForeColor;
+        dgvProfiles.ColumnHeadersDefaultCellStyle.Font = new Font(dgvProfiles.Font, FontStyle.Bold);
+        dgvProfiles.ColumnHeadersDefaultCellStyle.SelectionBackColor = _themePalette.GridHeaderBackColor;
+        dgvProfiles.ColumnHeadersDefaultCellStyle.SelectionForeColor = _themePalette.GridHeaderForeColor;
+        dgvProfiles.DefaultCellStyle.BackColor = _themePalette.GridBackColor;
+        dgvProfiles.DefaultCellStyle.ForeColor = _themePalette.GridForeColor;
+        dgvProfiles.DefaultCellStyle.SelectionBackColor = _themePalette.GridSelectionBackColor;
+        dgvProfiles.DefaultCellStyle.SelectionForeColor = _themePalette.GridSelectionForeColor;
+        dgvProfiles.AlternatingRowsDefaultCellStyle.BackColor = _themePalette.GridBackColor;
+        dgvProfiles.AlternatingRowsDefaultCellStyle.ForeColor = _themePalette.GridForeColor;
+    }
+
     private void ApplyAdvancedSettingsVisibility()
     {
         grpAdvancedSettings.Visible = chkShowAdvancedSettings.Checked;
@@ -602,9 +734,9 @@ public partial class MainForm : Form
         var gridBottom = logsHeaderTop - LogsGap;
 
         dgvProfiles.Height = Math.Max(180, gridBottom - dgvProfiles.Top);
-        lblLogs.Top = logsHeaderTop + 7;
-        btnClearLog.Top = logsHeaderTop;
-        btnCopyLog.Top = logsHeaderTop;
+        lblLogs.Top = logsHeaderTop + 6;
+        btnClearLog.Top = logsHeaderTop + 1;
+        btnCopyLog.Top = logsHeaderTop + 1;
         txtLogs.Top = logsTop;
         txtLogs.Height = LogsHeight;
     }

@@ -4,6 +4,7 @@ partial class MainForm
 {
     private System.ComponentModel.IContainer components = null;
     private Label lblTitle;
+    private Button btnThemeToggle;
     private Label lblDescription;
     private Label lblStepsHelp;
     private GroupBox grpConnection;
@@ -38,6 +39,7 @@ partial class MainForm
     private Label lblLogs;
     private Button btnClearLog;
     private Button btnCopyLog;
+    private Label lblAuthor;
     private TextBox txtLogs;
     private ToolTip toolTip;
 
@@ -56,6 +58,7 @@ partial class MainForm
     {
         components = new System.ComponentModel.Container();
         lblTitle = new Label();
+        btnThemeToggle = new Button();
         lblDescription = new Label();
         lblStepsHelp = new Label();
         grpConnection = new GroupBox();
@@ -90,6 +93,7 @@ partial class MainForm
         lblLogs = new Label();
         btnClearLog = new Button();
         btnCopyLog = new Button();
+        lblAuthor = new Label();
         txtLogs = new TextBox();
         toolTip = new ToolTip(components);
         grpConnection.SuspendLayout();
@@ -109,6 +113,20 @@ partial class MainForm
         lblTitle.Size = new Size(331, 30);
         lblTitle.TabIndex = 0;
         lblTitle.Text = "Removedor de Perfis Windows";
+        // 
+        // btnThemeToggle
+        // 
+        btnThemeToggle.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+        btnThemeToggle.FlatStyle = FlatStyle.Flat;
+        btnThemeToggle.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
+        btnThemeToggle.Location = new Point(1032, 18);
+        btnThemeToggle.Name = "btnThemeToggle";
+        btnThemeToggle.Size = new Size(36, 30);
+        btnThemeToggle.TabIndex = 14;
+        btnThemeToggle.Text = "☾";
+        toolTip.SetToolTip(btnThemeToggle, "Alternar modo claro/escuro.");
+        btnThemeToggle.UseVisualStyleBackColor = true;
+        btnThemeToggle.Click += BtnThemeToggle_Click;
         // 
         // lblDescription
         // 
@@ -467,6 +485,16 @@ partial class MainForm
         btnCopyLog.UseVisualStyleBackColor = true;
         btnCopyLog.Click += BtnCopyLog_Click;
         // 
+        // lblAuthor
+        // 
+        lblAuthor.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+        lblAuthor.AutoSize = true;
+        lblAuthor.Location = new Point(912, 735);
+        lblAuthor.Name = "lblAuthor";
+        lblAuthor.Size = new Size(156, 15);
+        lblAuthor.TabIndex = 15;
+        lblAuthor.Text = "by João Vitor Paska Rossetto";
+        // 
         // txtLogs
         // 
         txtLogs.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
@@ -485,6 +513,7 @@ partial class MainForm
         AutoScaleMode = AutoScaleMode.Font;
         ClientSize = new Size(1094, 754);
         Controls.Add(txtLogs);
+        Controls.Add(lblAuthor);
         Controls.Add(btnCopyLog);
         Controls.Add(btnClearLog);
         Controls.Add(lblLogs);
@@ -497,6 +526,7 @@ partial class MainForm
         Controls.Add(grpConnection);
         Controls.Add(lblDescription);
         Controls.Add(lblStepsHelp);
+        Controls.Add(btnThemeToggle);
         Controls.Add(lblTitle);
         MinimumSize = new Size(1040, 680);
         Name = "MainForm";

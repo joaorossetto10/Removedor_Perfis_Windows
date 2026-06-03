@@ -24,6 +24,14 @@ As configurações avançadas exibem opções e detalhes técnicos, como credenc
 
 Perfis bloqueados continuam sem seleção e não podem ser removidos, mesmo quando os detalhes técnicos estão visíveis.
 
+## Modo claro e modo escuro
+
+O botão de sol/lua no topo alterna entre modo claro e modo escuro. Essa alteração é apenas visual e não muda as regras de segurança, listagem, cálculo ou remoção.
+
+O aplicativo usa um ícone nativo de escudo do Windows na janela principal. Nenhuma imagem externa é usada.
+
+Desenvolvido por João Vitor Paska Rossetto.
+
 Ainda não há implementação de:
 
 - exclusão de contas de usuário locais ou do domínio/AD.
