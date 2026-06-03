@@ -360,7 +360,7 @@ partial class MainForm
         dgvProfiles.Name = "dgvProfiles";
         dgvProfiles.RowHeadersVisible = false;
         dgvProfiles.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-        dgvProfiles.Size = new Size(1040, 230);
+        dgvProfiles.Size = new Size(1040, 191);
         dgvProfiles.TabIndex = 9;
         dgvProfiles.CellBeginEdit += DgvProfiles_CellBeginEdit;
         dgvProfiles.CellContentClick += DgvProfiles_CellContentClick;
@@ -457,7 +457,7 @@ partial class MainForm
         // 
         lblLogs.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
         lblLogs.AutoSize = true;
-        lblLogs.Location = new Point(28, 608);
+        lblLogs.Location = new Point(28, 570);
         lblLogs.Name = "lblLogs";
         lblLogs.Size = new Size(31, 15);
         lblLogs.TabIndex = 10;
@@ -466,7 +466,7 @@ partial class MainForm
         // btnClearLog
         // 
         btnClearLog.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-        btnClearLog.Location = new Point(900, 602);
+        btnClearLog.Location = new Point(900, 563);
         btnClearLog.Name = "btnClearLog";
         btnClearLog.Size = new Size(78, 27);
         btnClearLog.TabIndex = 11;
@@ -477,7 +477,7 @@ partial class MainForm
         // btnCopyLog
         // 
         btnCopyLog.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-        btnCopyLog.Location = new Point(986, 602);
+        btnCopyLog.Location = new Point(986, 563);
         btnCopyLog.Name = "btnCopyLog";
         btnCopyLog.Size = new Size(82, 27);
         btnCopyLog.TabIndex = 12;
@@ -499,12 +499,12 @@ partial class MainForm
         // 
         txtLogs.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
         txtLogs.Font = new Font("Consolas", 9F);
-        txtLogs.Location = new Point(28, 635);
+        txtLogs.Location = new Point(28, 601);
         txtLogs.Multiline = true;
         txtLogs.Name = "txtLogs";
         txtLogs.ReadOnly = true;
         txtLogs.ScrollBars = ScrollBars.Vertical;
-        txtLogs.Size = new Size(1040, 95);
+        txtLogs.Size = new Size(1040, 125);
         txtLogs.TabIndex = 13;
         // 
         // MainForm
@@ -528,7 +528,7 @@ partial class MainForm
         Controls.Add(lblStepsHelp);
         Controls.Add(btnThemeToggle);
         Controls.Add(lblTitle);
-        MinimumSize = new Size(1040, 680);
+        MinimumSize = new Size(1040, 760);
         Name = "MainForm";
         StartPosition = FormStartPosition.CenterScreen;
         Text = "Removedor de Perfis Windows";

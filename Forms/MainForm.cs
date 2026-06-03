@@ -12,8 +12,9 @@ public partial class MainForm : Form
     private const int LegendGap = 10;
     private const int GridGap = 4;
     private const int LogsGap = 12;
-    private const int LogsHeaderHeight = 27;
-    private const int LogsHeight = 95;
+    private const int LogsHeaderHeight = 30;
+    private const int LogsHeaderToTextGap = 8;
+    private const int LogsHeight = 125;
     private const int SideMargin = 28;
 
     private readonly LogService _logService = new();
@@ -730,13 +731,13 @@ public partial class MainForm : Form
         }
 
         var logsTop = ClientSize.Height - SideMargin - LogsHeight;
-        var logsHeaderTop = logsTop - LogsHeaderHeight;
+        var logsHeaderTop = logsTop - LogsHeaderToTextGap - LogsHeaderHeight;
         var gridBottom = logsHeaderTop - LogsGap;
 
         dgvProfiles.Height = Math.Max(180, gridBottom - dgvProfiles.Top);
-        lblLogs.Top = logsHeaderTop + 6;
-        btnClearLog.Top = logsHeaderTop + 1;
-        btnCopyLog.Top = logsHeaderTop + 1;
+        lblLogs.Top = logsHeaderTop + 7;
+        btnClearLog.Top = logsHeaderTop;
+        btnCopyLog.Top = logsHeaderTop;
         txtLogs.Top = logsTop;
         txtLogs.Height = LogsHeight;
     }
