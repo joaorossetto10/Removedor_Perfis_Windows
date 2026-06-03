@@ -32,8 +32,8 @@ partial class RemovalConfirmationForm
         lstProfiles = new ListBox();
         lblConfirmation = new Label();
         txtConfirmation = new TextBox();
-        btnConfirm = new Button();
-        btnCancel = new Button();
+        btnConfirm = new RemovedorPerfisWindows.Controls.ThemedButton();
+        btnCancel = new RemovedorPerfisWindows.Controls.ThemedButton();
         SuspendLayout();
         // 
         // lblTitle

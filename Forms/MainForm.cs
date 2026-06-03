@@ -359,7 +359,7 @@ public partial class MainForm : Form
             return;
         }
 
-        using (var confirmationForm = new RemovalConfirmationForm(computerName, selectedProfiles))
+        using (var confirmationForm = new RemovalConfirmationForm(computerName, selectedProfiles, _themeMode))
         {
             if (confirmationForm.ShowDialog(this) != DialogResult.OK)
             {
