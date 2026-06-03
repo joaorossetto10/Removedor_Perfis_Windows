@@ -17,6 +17,14 @@ public partial class MainForm : Form
     private const int LogsHeaderToTextGap = 8;
     private const int LogsHeight = 125;
     private const int SideMargin = 28;
+    private const int TopGroupsTop = 120;
+    private const int TopGroupsHeight = 104;
+    private const int TopGroupsGap = 16;
+    private const int GroupPadding = 16;
+    private const int ButtonGap = 12;
+    private const int ActionButtonHeight = 28;
+    private const int ActionButtonMaxWidth = 150;
+    private const int CalculateButtonMaxWidth = 312;
 
     private readonly LogService _logService = new();
     private readonly BindingList<UserProfileInfo> _profiles = [];
@@ -29,6 +37,7 @@ public partial class MainForm : Form
     private ThemePalette _themePalette = ThemeHelper.GetPalette(AppThemeMode.Light);
     private DataGridViewColumn? _currentSortColumn;
     private ListSortDirection _currentSortDirection = ListSortDirection.Ascending;
+    private bool _updatingSelectAllRemovable;
 
     public MainForm()
     {
@@ -144,6 +153,7 @@ public partial class MainForm : Form
         {
             credential?.Clear();
             SetLoadingState(false);
+            UpdateRemoveButtonState();
         }
     }
 
@@ -191,8 +201,9 @@ public partial class MainForm : Form
         chkShowTechnicalDetails.Enabled = !isLoading;
         btnCancelSizeCalculation.Enabled = false;
         btnRemoveSelected.Enabled = !isLoading && HasSelectedRemovableProfiles();
-        btnCalculateSelectedSize.Enabled = !isLoading && HasSingleSelectedSizeCalculationProfile();
-        UseWaitCursor = isLoading;
+        btnCalculateSelectedSize.Enabled = !isLoading && HasSelectedSizeCalculationProfiles();
+        chkSelectAllRemovable.Enabled = !isLoading && HasVisibleRemovableProfiles();
+        SetBusyCursor(isLoading);
 
         if (isLoading)
         {
@@ -469,8 +480,9 @@ public partial class MainForm : Form
     {
         btnLoadProfiles.Enabled = !isRemoving;
         btnRemoveSelected.Enabled = !isRemoving && HasSelectedRemovableProfiles();
-        btnCalculateSelectedSize.Enabled = !isRemoving && HasSingleSelectedSizeCalculationProfile();
+        btnCalculateSelectedSize.Enabled = !isRemoving && HasSelectedSizeCalculationProfiles();
         btnCancelSizeCalculation.Enabled = false;
+        chkSelectAllRemovable.Enabled = !isRemoving && HasVisibleRemovableProfiles();
         txtComputerName.Enabled = !isRemoving;
         chkUseAdminCredential.Enabled = !isRemoving;
         chkCalculateProfileSize.Enabled = !isRemoving;
@@ -478,13 +490,14 @@ public partial class MainForm : Form
         chkShowSystemProfiles.Enabled = !isRemoving;
         chkShowTechnicalDetails.Enabled = !isRemoving;
         dgvProfiles.Enabled = !isRemoving;
-        UseWaitCursor = isRemoving;
+        SetBusyCursor(isRemoving);
     }
 
     private void UpdateRemoveButtonState()
     {
         btnRemoveSelected.Enabled = HasSelectedRemovableProfiles();
-        btnCalculateSelectedSize.Enabled = HasSingleSelectedSizeCalculationProfile();
+        btnCalculateSelectedSize.Enabled = HasSelectedSizeCalculationProfiles();
+        UpdateSelectAllRemovableState();
     }
 
     private bool HasSelectedRemovableProfiles()
@@ -492,9 +505,14 @@ public partial class MainForm : Form
         return _profiles.Any(profile => profile.IsSelected && profile.CanRemove);
     }
 
-    private bool HasSingleSelectedSizeCalculationProfile()
+    private bool HasSelectedSizeCalculationProfiles()
     {
-        return GetSelectedSizeCalculationProfiles().Count == 1;
+        return GetSelectedSizeCalculationProfiles().Count > 0;
+    }
+
+    private bool HasVisibleRemovableProfiles()
+    {
+        return _profiles.Any(profile => profile.CanRemove);
     }
 
     private List<UserProfileInfo> GetSelectedSizeCalculationProfiles()
@@ -509,6 +527,68 @@ public partial class MainForm : Form
         return profile.CanRemove
             && !profile.IsSystemOrServiceProfile
             && UserProfileSafetyHelper.IsUsersProfilePath(profile.LocalPath);
+    }
+
+    private void ChkSelectAllRemovable_CheckedChanged(object? sender, EventArgs e)
+    {
+        if (_updatingSelectAllRemovable)
+        {
+            return;
+        }
+
+        var removableProfiles = _profiles
+            .Where(profile => profile.CanRemove)
+            .ToList();
+
+        if (removableProfiles.Count == 0)
+        {
+            UpdateSelectAllRemovableState();
+            return;
+        }
+
+        if (chkSelectAllRemovable.Checked)
+        {
+            foreach (var profile in removableProfiles)
+            {
+                profile.IsSelected = true;
+            }
+
+            _logService.AddInfo($"Selecionados {removableProfiles.Count} perfil(is) removível(is).");
+        }
+        else
+        {
+            foreach (var profile in removableProfiles)
+            {
+                profile.IsSelected = false;
+            }
+
+            _logService.AddInfo("Seleção de perfis removíveis limpa.");
+        }
+
+        dgvProfiles.Refresh();
+        ApplyProfileRowStyles();
+        UpdateRemoveButtonState();
+    }
+
+    private void UpdateSelectAllRemovableState()
+    {
+        if (chkSelectAllRemovable is null)
+        {
+            return;
+        }
+
+        var removableProfiles = _profiles
+            .Where(profile => profile.CanRemove)
+            .ToList();
+
+        _updatingSelectAllRemovable = true;
+        chkSelectAllRemovable.Enabled = removableProfiles.Count > 0
+            && btnLoadProfiles.Enabled
+            && dgvProfiles.Enabled
+            && _sizeCalculationCancellation is null;
+        chkSelectAllRemovable.Checked = removableProfiles.Count > 0
+            && removableProfiles.All(profile => profile.IsSelected);
+        _updatingSelectAllRemovable = false;
     }
 
     private void ApplyProfileVisibilityFilter()
@@ -739,15 +819,15 @@ public partial class MainForm : Form
         var computerName = txtComputerName.Text.Trim();
         if (string.IsNullOrWhiteSpace(computerName))
         {
-            _logService.AddWarning("Informe o nome do computador remoto antes de calcular o tamanho do perfil selecionado.");
+            _logService.AddWarning("Informe o nome do computador remoto antes de calcular o tamanho dos perfis selecionados.");
             return;
         }
 
         var selectedProfiles = GetSelectedSizeCalculationProfiles();
-        if (selectedProfiles.Count != 1)
+        if (selectedProfiles.Count == 0)
         {
-            lblStatus.Text = "selecione exatamente um perfil disponível para calcular o tamanho.";
-            _logService.AddWarning("Cálculo individual não iniciado: selecione exatamente um perfil disponível.");
+            lblStatus.Text = "selecione ao menos um perfil disponível para calcular o tamanho.";
+            _logService.AddWarning("Cálculo não iniciado: selecione ao menos um perfil disponível.");
             UpdateRemoveButtonState();
             return;
         }
@@ -759,7 +839,7 @@ public partial class MainForm : Form
             using var credentialForm = new CredentialForm();
             if (credentialForm.ShowDialog(this) != DialogResult.OK || credentialForm.Credential is null)
             {
-                _logService.AddWarning("Credencial administrativa cancelada. Cálculo individual cancelado.");
+                _logService.AddWarning("Credencial administrativa cancelada. Cálculo dos perfis selecionados cancelado.");
                 lblStatus.Text = "cálculo cancelado.";
                 return;
             }
@@ -767,22 +847,31 @@ public partial class MainForm : Form
             credential = credentialForm.Credential;
         }
 
-        var profile = selectedProfiles[0];
-        profile.SizeDisplay = "Calculando...";
-        profile.SizeBytes = null;
-        _logService.AddInfo($"Iniciando cálculo individual de tamanho para {profile}.");
-        lblStatus.Text = "calculando tamanho do perfil selecionado...";
-        dgvProfiles.Refresh();
+        _logService.AddInfo($"Iniciando cálculo de tamanho para {selectedProfiles.Count} perfil(is) selecionado(s).");
+        foreach (var profile in selectedProfiles)
+        {
+            _logService.AddInfo($"Perfil selecionado para cálculo: {profile}.");
+        }
+
+        lblStatus.Text = selectedProfiles.Count == 1
+            ? "calculando tamanho do perfil selecionado..."
+            : $"calculando tamanho de {selectedProfiles.Count} perfis selecionados...";
 
         SetSizeCalculationState(isCalculating: true);
 
         _sizeCalculationCancellation?.Dispose();
         _sizeCalculationCancellation = new CancellationTokenSource();
+        var results = new Dictionary<string, ProfileSizeResult>(StringComparer.OrdinalIgnoreCase);
 
         var progress = new Progress<ProfileSizeResult>(result =>
         {
             result.Profile.SizeDisplay = GetIndividualSizeDisplayText(result);
             result.Profile.SizeBytes = result.Bytes;
+            if (!string.Equals(result.DisplayText, "Calculando...", StringComparison.OrdinalIgnoreCase))
+            {
+                results[GetProfileKey(result.Profile)] = result;
+            }
+
             dgvProfiles.Refresh();
         });
 
@@ -795,17 +884,33 @@ public partial class MainForm : Form
                 progress,
                 _sizeCalculationCancellation.Token);
 
-            lblStatus.Text = _sizeCalculationCancellation.IsCancellationRequested
-                ? "cálculo cancelado."
-                : "tamanho calculado para o perfil selecionado.";
+            if (_sizeCalculationCancellation.IsCancellationRequested)
+            {
+                lblStatus.Text = "cálculo cancelado.";
+                _logService.AddWarning("Cálculo dos perfis selecionados cancelado pelo usuário.");
+            }
+            else
+            {
+                var calculatedCount = results.Values.Count(result => result.Status == ProfileSizeResultStatus.Calculated);
+                var notApplicableCount = results.Values.Count(result => result.Status == ProfileSizeResultStatus.Ignored);
+                var errorCount = results.Values.Count(result =>
+                    result.Status is ProfileSizeResultStatus.AccessDenied
+                        or ProfileSizeResultStatus.Timeout
+                        or ProfileSizeResultStatus.Error);
 
-            _logService.AddInfo($"Cálculo individual concluído para {profile}: {profile.SizeDisplay}.");
+                lblStatus.Text = $"cálculo concluído | {calculatedCount} calculado(s) | {notApplicableCount} não aplicável(is) | {errorCount} erro(s).";
+                _logService.AddInfo($"Cálculo dos perfis selecionados concluído: {calculatedCount} calculado(s), {notApplicableCount} não aplicável(is), {errorCount} erro(s).");
+            }
         }
         catch (OperationCanceledException)
         {
-            profile.SizeDisplay = "Cancelado";
-            profile.SizeBytes = null;
-            _logService.AddWarning($"Cálculo individual cancelado para {profile}.");
+            foreach (var profile in selectedProfiles.Where(profile => profile.SizeDisplay is "Não calculado" or "Calculando..."))
+            {
+                profile.SizeDisplay = "Cancelado";
+                profile.SizeBytes = null;
+            }
+
+            _logService.AddWarning("Cálculo dos perfis selecionados cancelado pelo usuário.");
             lblStatus.Text = "cálculo cancelado.";
         }
         finally
@@ -824,13 +929,26 @@ public partial class MainForm : Form
         btnRemoveSelected.Enabled = !isCalculating && HasSelectedRemovableProfiles();
         btnCalculateSelectedSize.Enabled = false;
         btnCancelSizeCalculation.Enabled = isCalculating;
+        chkSelectAllRemovable.Enabled = !isCalculating && HasVisibleRemovableProfiles();
         txtComputerName.Enabled = !isCalculating;
         chkUseAdminCredential.Enabled = !isCalculating;
         chkCalculateProfileSize.Enabled = !isCalculating;
         chkShowAdvancedSettings.Enabled = !isCalculating;
         chkShowSystemProfiles.Enabled = !isCalculating;
         chkShowTechnicalDetails.Enabled = !isCalculating;
-        UseWaitCursor = isCalculating;
+        SetBusyCursor(isCalculating);
+    }
+
+    private void SetBusyCursor(bool isBusy)
+    {
+        UseWaitCursor = isBusy;
+        Cursor = isBusy ? Cursors.WaitCursor : Cursors.Default;
+        Cursor.Current = isBusy ? Cursors.WaitCursor : Cursors.Default;
+
+        if (dgvProfiles is not null)
+        {
+            dgvProfiles.Cursor = isBusy ? Cursors.WaitCursor : Cursors.Default;
+        }
     }
 
     private static string GetIndividualSizeDisplayText(ProfileSizeResult result)
@@ -1114,12 +1232,7 @@ public partial class MainForm : Form
     private void ApplyAdvancedSettingsVisibility()
     {
         grpAdvancedSettings.Visible = chkShowAdvancedSettings.Checked;
-
-        var statusTop = chkShowAdvancedSettings.Checked ? ExpandedStatusTop : CollapsedStatusTop;
-        grpStatus.Top = statusTop;
-        lblLegend.Top = grpStatus.Bottom + LegendGap;
-        dgvProfiles.Top = lblLegend.Bottom + GridGap;
-        ResizeMainSections();
+        LayoutResponsiveSections();
     }
 
     private void ApplyTechnicalColumnsVisibility()
@@ -1227,22 +1340,121 @@ public partial class MainForm : Form
             return;
         }
 
+        var contentWidth = Math.Max(0, ClientSize.Width - (SideMargin * 2));
         var logsTop = ClientSize.Height - SideMargin - LogsHeight;
         var logsHeaderTop = logsTop - LogsHeaderToTextGap - LogsHeaderHeight;
         var gridBottom = logsHeaderTop - LogsGap;
 
+        lblLogs.Left = SideMargin;
         dgvProfiles.Height = Math.Max(180, gridBottom - dgvProfiles.Top);
         lblLogs.Top = logsHeaderTop + 7;
+        btnCopyLog.Left = ClientSize.Width - SideMargin - btnCopyLog.Width;
+        btnClearLog.Left = btnCopyLog.Left - 8 - btnClearLog.Width;
         btnClearLog.Top = logsHeaderTop;
         btnCopyLog.Top = logsHeaderTop;
+        txtLogs.Left = SideMargin;
+        txtLogs.Width = contentWidth;
         txtLogs.Top = logsTop;
         txtLogs.Height = LogsHeight;
+        lblAuthor.Left = ClientSize.Width - SideMargin - lblAuthor.Width;
+        lblAuthor.Top = txtLogs.Bottom + 6;
     }
 
     protected override void OnResize(EventArgs e)
     {
         base.OnResize(e);
+        LayoutResponsiveSections();
+    }
+
+    private void LayoutResponsiveSections()
+    {
+        if (grpConnection is null || grpOptions is null || grpActions is null)
+        {
+            return;
+        }
+
+        var contentWidth = Math.Max(0, ClientSize.Width - (SideMargin * 2));
+        var availableTopWidth = Math.Max(0, contentWidth - (TopGroupsGap * 2));
+
+        var connectionWidth = Math.Max(360, (int)(availableTopWidth * 0.35));
+        var optionsWidth = Math.Max(320, (int)(availableTopWidth * 0.31));
+        var actionsWidth = availableTopWidth - connectionWidth - optionsWidth;
+
+        if (actionsWidth < 328)
+        {
+            var deficit = 328 - actionsWidth;
+            var reduceConnection = Math.Min(deficit / 2, Math.Max(0, connectionWidth - 360));
+            connectionWidth -= reduceConnection;
+            deficit -= reduceConnection;
+
+            var reduceOptions = Math.Min(deficit, Math.Max(0, optionsWidth - 320));
+            optionsWidth -= reduceOptions;
+            actionsWidth = availableTopWidth - connectionWidth - optionsWidth;
+        }
+
+        actionsWidth = Math.Max(328, actionsWidth);
+
+        grpConnection.SetBounds(SideMargin, TopGroupsTop, connectionWidth, TopGroupsHeight);
+        grpOptions.SetBounds(grpConnection.Right + TopGroupsGap, TopGroupsTop, optionsWidth, TopGroupsHeight);
+        grpActions.SetBounds(grpOptions.Right + TopGroupsGap, TopGroupsTop, Math.Max(328, SideMargin + contentWidth - (grpOptions.Right + TopGroupsGap)), TopGroupsHeight);
+
+        grpAdvancedSettings.SetBounds(SideMargin, 232, contentWidth, 52);
+
+        var statusTop = chkShowAdvancedSettings.Checked ? ExpandedStatusTop : CollapsedStatusTop;
+        grpStatus.SetBounds(SideMargin, statusTop, contentWidth, 50);
+        lblStatus.Width = Math.Max(120, grpStatus.Width - lblStatus.Left - GroupPadding);
+
+        lblLegend.SetBounds(SideMargin, grpStatus.Bottom + LegendGap, contentWidth, 20);
+        chkSelectAllRemovable.Left = SideMargin;
+        chkSelectAllRemovable.Top = lblLegend.Bottom + GridGap;
+        dgvProfiles.Left = SideMargin;
+        dgvProfiles.Top = chkSelectAllRemovable.Bottom + GridGap;
+        dgvProfiles.Width = contentWidth;
+
+        LayoutConnectionGroup();
+        LayoutOptionsGroup();
+        LayoutActionsGroup();
+        LayoutAdvancedSettingsGroup();
         ResizeMainSections();
+    }
+
+    private void LayoutConnectionGroup()
+    {
+        var buttonWidth = 112;
+        var maxTextWidth = 360;
+        var availableWidth = Math.Max(120, grpConnection.Width - (GroupPadding * 2) - ButtonGap - buttonWidth);
+        var textWidth = Math.Min(maxTextWidth, availableWidth);
+
+        lblComputerName.Left = GroupPadding;
+        txtComputerName.SetBounds(GroupPadding, 53, textWidth, txtComputerName.Height);
+        btnLoadProfiles.SetBounds(txtComputerName.Right + ButtonGap, 52, buttonWidth, btnLoadProfiles.Height);
+    }
+
+    private void LayoutOptionsGroup()
+    {
+        chkCalculateProfileSize.Left = GroupPadding;
+        chkShowAdvancedSettings.Left = GroupPadding;
+    }
+
+    private void LayoutActionsGroup()
+    {
+        var availableWidth = Math.Max(260, grpActions.Width - (GroupPadding * 2));
+        var firstRowButtonWidth = Math.Min(ActionButtonMaxWidth, Math.Max(120, (availableWidth - ButtonGap) / 2));
+        var calculateButtonWidth = Math.Min(CalculateButtonMaxWidth, Math.Max(firstRowButtonWidth, (firstRowButtonWidth * 2) + ButtonGap));
+
+        btnRemoveSelected.SetBounds(GroupPadding, 27, firstRowButtonWidth, ActionButtonHeight);
+        btnCancelSizeCalculation.SetBounds(btnRemoveSelected.Right + ButtonGap, 27, firstRowButtonWidth, ActionButtonHeight);
+        btnCalculateSelectedSize.SetBounds(GroupPadding, 66, calculateButtonWidth, ActionButtonHeight);
+    }
+
+    private void LayoutAdvancedSettingsGroup()
+    {
+        var availableWidth = Math.Max(0, grpAdvancedSettings.Width - (GroupPadding * 2));
+        var columnWidth = Math.Max(220, availableWidth / 3);
+
+        chkUseAdminCredential.Left = GroupPadding;
+        chkShowSystemProfiles.Left = GroupPadding + columnWidth;
+        chkShowTechnicalDetails.Left = GroupPadding + (columnWidth * 2);
     }
 
     private static string GetFriendlyRemovalStatus(string message)

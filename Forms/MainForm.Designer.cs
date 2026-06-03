@@ -26,6 +26,7 @@ partial class MainForm
     private Label lblStatusTitle;
     private Label lblStatus;
     private Label lblLegend;
+    private CheckBox chkSelectAllRemovable;
     private DataGridView dgvProfiles;
     private DataGridViewCheckBoxColumn colSelection;
     private DataGridViewTextBoxColumn colUserName;
@@ -81,6 +82,7 @@ partial class MainForm
         lblStatusTitle = new Label();
         lblStatus = new Label();
         lblLegend = new Label();
+        chkSelectAllRemovable = new CheckBox();
         dgvProfiles = new DataGridView();
         colSelection = new DataGridViewCheckBoxColumn();
         colUserName = new DataGridViewTextBoxColumn();
@@ -304,8 +306,8 @@ partial class MainForm
         btnCalculateSelectedSize.Name = "btnCalculateSelectedSize";
         btnCalculateSelectedSize.Size = new Size(300, 28);
         btnCalculateSelectedSize.TabIndex = 2;
-        btnCalculateSelectedSize.Text = "Calcular perfil";
-        toolTip.SetToolTip(btnCalculateSelectedSize, "Calcula o tamanho apenas do perfil selecionado.");
+        btnCalculateSelectedSize.Text = "Calcular selecionados";
+        toolTip.SetToolTip(btnCalculateSelectedSize, "Calcula o tamanho dos perfis selecionados.");
         btnCalculateSelectedSize.UseVisualStyleBackColor = true;
         btnCalculateSelectedSize.Click += BtnCalculateSelectedSize_Click;
         // 
@@ -361,6 +363,19 @@ partial class MainForm
         lblLegend.TabIndex = 8;
         lblLegend.Text = "Legenda: branco = disponível | azul = selecionado | cinza = protegido/sistema | amarelo = atenção | vermelho = bloqueado/em uso/erro | verde = removido";
         // 
+        // chkSelectAllRemovable
+        // 
+        chkSelectAllRemovable.AutoSize = true;
+        chkSelectAllRemovable.Enabled = false;
+        chkSelectAllRemovable.Location = new Point(28, 360);
+        chkSelectAllRemovable.Name = "chkSelectAllRemovable";
+        chkSelectAllRemovable.Size = new Size(174, 19);
+        chkSelectAllRemovable.TabIndex = 9;
+        chkSelectAllRemovable.Text = "Selecionar todos removíveis";
+        toolTip.SetToolTip(chkSelectAllRemovable, "Seleciona apenas os perfis disponíveis para remoção.");
+        chkSelectAllRemovable.UseVisualStyleBackColor = true;
+        chkSelectAllRemovable.CheckedChanged += ChkSelectAllRemovable_CheckedChanged;
+        // 
         // dgvProfiles
         // 
         dgvProfiles.AllowUserToAddRows = false;
@@ -371,14 +386,14 @@ partial class MainForm
         dgvProfiles.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
         dgvProfiles.Columns.AddRange(new DataGridViewColumn[] { colSelection, colUserName, colLastUseTime, colIsLoaded, colSize, colStatus, colSid, colLocalPath, colOperationStatus, colObservation });
         dgvProfiles.EditMode = DataGridViewEditMode.EditOnEnter;
-        dgvProfiles.Location = new Point(28, 360);
+        dgvProfiles.Location = new Point(28, 384);
         dgvProfiles.MultiSelect = false;
         dgvProfiles.Name = "dgvProfiles";
         dgvProfiles.RowHeadersVisible = false;
         dgvProfiles.ScrollBars = ScrollBars.Both;
         dgvProfiles.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-        dgvProfiles.Size = new Size(1040, 191);
-        dgvProfiles.TabIndex = 9;
+        dgvProfiles.Size = new Size(1040, 167);
+        dgvProfiles.TabIndex = 10;
         dgvProfiles.CellBeginEdit += DgvProfiles_CellBeginEdit;
         dgvProfiles.CellContentClick += DgvProfiles_CellContentClick;
         dgvProfiles.CellValueChanged += DgvProfiles_CellValueChanged;
@@ -544,6 +559,7 @@ partial class MainForm
         Controls.Add(btnClearLog);
         Controls.Add(lblLogs);
         Controls.Add(dgvProfiles);
+        Controls.Add(chkSelectAllRemovable);
         Controls.Add(lblLegend);
         Controls.Add(grpStatus);
         Controls.Add(grpAdvancedSettings);
@@ -554,7 +570,7 @@ partial class MainForm
         Controls.Add(lblStepsHelp);
         Controls.Add(btnThemeToggle);
         Controls.Add(lblTitle);
-        MinimumSize = new Size(1040, 760);
+        MinimumSize = new Size(1100, 760);
         Name = "MainForm";
         StartPosition = FormStartPosition.CenterScreen;
         Text = "Removedor de Perfis Windows";
