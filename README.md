@@ -32,7 +32,23 @@ Perfis bloqueados continuam sem seleção e não podem ser removidos, mesmo quan
 
 O botão de sol/lua no topo alterna entre modo claro e modo escuro. Essa alteração é apenas visual e não muda as regras de segurança, listagem, cálculo ou remoção.
 
-O aplicativo usa um ícone nativo de escudo do Windows na janela principal. Nenhuma imagem externa é usada.
+O aplicativo usa o ícone simplificado oficial do RPW na janela principal e no executável.
+
+## Identidade visual
+
+Os arquivos da identidade visual ficam em `assets`:
+
+- `app-icon.ico`: ícone oficial do aplicativo, usado pela janela principal e pelo executável;
+- `app-icon.png`: imagem base do ícone oficial;
+- `app-icon-com-texto.ico`: alternativa guardada como recurso visual, mas não usada no executável;
+- `logo-rpw.png`: logo completo oficial do RPW, usado para documentação, GitHub, apresentação e futura tela "Sobre";
+- `logo-rpw-branco.png`: variação branca do logo completo, usada apenas para documentação/apresentação quando necessário.
+
+O logo oficial do RPW representa a limpeza segura de perfis locais em ambiente Windows. O monitor simboliza computadores Windows. O texto RPW identifica o aplicativo. A vassoura e o rastro dourado simbolizam limpeza e remoção controlada de perfis locais.
+
+O `app-icon.ico` é gerado a partir de `app-icon.png` e mantém a composição de ícone do aplicativo, sem subtítulo, para boa legibilidade em tamanhos pequenos como 16x16, 32x32 e 48x48.
+
+Arquivos antigos ou variações que não fazem parte do conjunto principal ficam preservados em `assets/archive`.
 
 Desenvolvido por João Vitor Paska Rossetto.
 

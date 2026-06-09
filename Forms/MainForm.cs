@@ -42,7 +42,7 @@ public partial class MainForm : Form
     public MainForm()
     {
         InitializeComponent();
-        Icon = SystemIcons.Shield;
+        Icon = LoadWindowIcon();
 
         _userProfileQueryService = new UserProfileQueryService(_logService);
         _profileSizeService = new ProfileSizeService(_logService);
@@ -55,6 +55,24 @@ public partial class MainForm : Form
 
         _logService.EntryAdded += OnLogEntryAdded;
         _logService.AddInfo("Aplicativo iniciado. Informe o computador remoto e clique em Carregar perfis.");
+    }
+
+    private static Icon LoadWindowIcon()
+    {
+        var iconPath = Path.Combine(AppContext.BaseDirectory, "assets", "app-icon.ico");
+        if (!File.Exists(iconPath))
+        {
+            return SystemIcons.Shield;
+        }
+
+        try
+        {
+            return new Icon(iconPath);
+        }
+        catch
+        {
+            return SystemIcons.Shield;
+        }
     }
 
     private void OnLogEntryAdded(object? sender, string entry)
