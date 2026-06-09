@@ -50,6 +50,8 @@ O `app-icon.ico` é gerado a partir de `app-icon.png` e mantém a composição d
 
 Arquivos antigos ou variações que não fazem parte do conjunto principal ficam preservados em `assets/archive`.
 
+Se o Windows ainda mostrar um ícone antigo ou branco na barra de tarefas, normalmente é cache de ícones. Nesse caso, desafixe o app da barra, feche o aplicativo, gere/publique novamente, execute o novo `.exe` e fixe novamente. Se persistir, reinicie o Windows Explorer ou limpe o cache de ícones do Windows.
+
 Desenvolvido por João Vitor Paska Rossetto.
 
 Ainda não há implementação de:
